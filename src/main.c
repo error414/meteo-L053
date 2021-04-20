@@ -6,12 +6,7 @@
 #include "shell.h"
 #include "pools.h"
 #include "eeprom.h"
-
-#ifdef BUILD_TYPE_DEBUG
-#include "debugShellCmd.h"
-#else
 #include "shellCmd.h"
-#endif
 
 #include "ml8511.h"
 

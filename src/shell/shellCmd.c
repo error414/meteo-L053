@@ -12,6 +12,50 @@
 #include "hc12Thread.h"
 #include "eeprom.h"
 
+#if (SHELL_CMD_THREADS_ENABLED == TRUE) || defined(__DOXYGEN__)
+static void cmd_threads(BaseSequentialStream *chp, int argc, char *argv[]) {
+	static const char *states[] = {CH_STATE_NAMES};
+	thread_t *tp;
+	size_t sz;
+	uint32_t used_pct;
+	size_t n = 0;
+	(void)argv;
+	if (argc > 0) {
+		shellUsage(chp, "threads");
+		return;
+	}
+	chprintf(chp, "  size    used   used %%     prio     state         name\r\n");
+	chprintf(chp, "--------------------------------------------------------------------\r\n");
+	tp = chRegFirstThread();
+	do {
+		n = 0;
+#if (CH_DBG_ENABLE_STACK_CHECK == TRUE) || (CH_CFG_USE_DYNAMIC == TRUE)
+		uint32_t stklimit = (uint32_t)tp->wabase;
+#else
+		uint32_t stklimit = 0U;
+#endif
+
+		uint8_t *begin = (uint8_t *)stklimit;
+		uint8_t *end = (uint8_t *)tp;
+		sz = end - begin;
+
+		while(begin < end)
+			if(*begin++ == CH_DBG_STACK_FILL_VALUE) ++n;
+
+
+		used_pct = 100 - (n * 100) / sz;
+		chprintf(chp, "%6u   %6u  %6u%%   %3u      %9s %12s" SHELL_NEWLINE_STR,
+		         sz,
+		         sz - n,
+		         used_pct,
+		         (uint32_t)tp->realprio,
+		         states[tp->state],
+		         tp->name == NULL ? "" : tp->name);
+		tp = chRegNextThread(tp);
+	} while (tp != NULL);
+}
+#endif
+
 /**
  *
  * @param chp
@@ -204,6 +248,9 @@ static void cmd_send(BaseSequentialStream *chp, int argc, char *argv[]){
  */
 
 const ShellCommand shellCommands[] = {
+#if SHELL_CMD_THREADS_ENABLED == TRUE
+		{"threads", cmd_threads},
+#endif
   {"sleep", cmd_sleep},
   {"hc12set", cmd_hc12Set},
   {"values", cmd_values},

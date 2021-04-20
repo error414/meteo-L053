@@ -27,7 +27,7 @@
 #include "ch.h"
 #include "hal.h"
 #include "shell.h"
-#include "debugShellCmd.h"
+#include "shellCmd.h"
 #include "chprintf.h"
 
 /*===========================================================================*/
