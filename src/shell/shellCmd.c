@@ -185,15 +185,23 @@ static void cmd_values(BaseSequentialStream *chp, int argc, char *argv[]){
 			for(uint8_t ii = 0; ii < HW_LIST_VALUES_SIZE; ii++){
 				if(hwList[i]->values[ii].name != NULL){
 
-					float value = (float)hwList[i]->values[ii].value;
-					if(hwList[i]->values[ii].formatter == VALUE_FORMATTER_100){
-						value /= 100;
+					if(hwList[i]->values[ii].formatter == VALUE_FORMATTER_BOOL){
+						chprintf(chp, "%15s: %3s  " SHELL_NEWLINE_STR,
+						         hwList[i]->values[ii].name,
+						         hwList[i]->values[ii].value ? "ON" : "OFF"
+						);
+					}else{
+
+						float value = (float)hwList[i]->values[ii].value;
+						if(hwList[i]->values[ii].formatter == VALUE_FORMATTER_100){
+							value /= 100;
+						}
+						chprintf(chp, "%15s: %.2f  " SHELL_NEWLINE_STR,
+						         hwList[i]->values[ii].name,
+						         value
+						);
 					}
 
-					chprintf(chp, "%15s: %.2f  " SHELL_NEWLINE_STR,
-			            hwList[i]->values[ii].name,
-						value
-					);
 				}
 			}
 		}
@@ -210,7 +218,7 @@ static void cmd_hc12Set(BaseSequentialStream *chp, int argc, char *argv[]){
 	(void)argv;
 
 	if(!HC12__thread_reconfigureDefault(chp)){
-		chprintf(chp, "ERROR");
+		chprintf(chp, "ERROR" SHELL_NEWLINE_STR);
 	}
 }
 

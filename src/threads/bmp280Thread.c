@@ -5,7 +5,6 @@
 #include "pools.h"
 #include "msp.h"
 #include "hwListThread.h"
-#include "scheduleListThread.h"
 
 #define BMP280_TEMP 0
 #define BMP280_HUM 1
@@ -24,7 +23,7 @@ static THD_WORKING_AREA(BMP280VA, 260);
 static THD_FUNCTION(Bmp280Thread, arg) {
 	(void) arg;
 	chRegSetThreadName("Bmp280");
-	uint32_t streamBuff[5];
+	uint32_t streamBuff[3];
 
 	float temperature;
 	float pressure;

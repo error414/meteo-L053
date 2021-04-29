@@ -2,7 +2,7 @@
 #define HW_LIST_THREAD_H
 
 #define  HW_LIST_SIZE           10
-#define  HW_LIST_VALUES_SIZE    4
+#define  HW_LIST_VALUES_SIZE    6
 
 #define HW_STATUS_LIST "UNKNOWN", "OK", "ERROR"
 #define HW_TYPE_LIST "SENSOR", "TRANSMITTER"
@@ -21,6 +21,7 @@ enum hwStatus_e {
 typedef enum {
 	VALUE_FORMATTER_NONE    = 0,
 	VALUE_FORMATTER_100     = 1,
+	VALUE_FORMATTER_BOOL    = 2,
 } valueFormatter_e;
 
 typedef struct {

@@ -17,6 +17,8 @@
 #include "ml8511Thread.h"
 #include "hc12Thread.h"
 #include "powerThread.h"
+#include "windThread.h"
+#include "rainThread.h"
 
 appConfiguration_t appConfiguration;
 
@@ -97,6 +99,19 @@ int main(void) {
 			.modeFU     = HC12_AT_MODE_FU1,
 			.power      = HC12_AT_POWER_6_3mw
 	};
+
+	const wind__threadConfig_t windCfg = {
+			.hwId = WIND_HW_ID,
+			.windLine = LINE_GPIOA_7,
+			.interval = appConfiguration.interval[WIND_HW_ID] > 0 ? appConfiguration.interval[WIND_HW_ID] * 1000 : DEFAULT_INTERVAL * 1000,
+	};
+
+	const rain__threadConfig_t rainCfg = {
+			.hwId = POWER_HW_ID,
+			.adcGroup = &adcgrpcfgRain,
+			.adcDriver = &ADCD1,
+			.interval = appConfiguration.interval[RAIN_HW_ID] > 0 ? appConfiguration.interval[RAIN_HW_ID] * 1000 : DEFAULT_INTERVAL * 1000,
+	};
 	///////////////////////////////////////////////////////////////
 
 	///////////////////////////////////////////////////////////////
@@ -107,6 +122,8 @@ int main(void) {
 	i2c1_init();
 	adc_power_init();
 	adc_device2_init();
+	device_wind_init();
+	adc_rain_init();
 	///////////////////////////////////////////////////////////////
 
 
@@ -120,6 +137,8 @@ int main(void) {
 	Bh1750__thread_init(&bh1750Cfg);
 	Ml8511__thread_init(&ml8511Cfg);
 	Power__thread_init(&powerCfg);
+	Wind__thread_init(&windCfg);
+	Rain__thread_init(&rainCfg);
 	///////////////////////////////////////////////////////////////
 
 
@@ -132,7 +151,9 @@ int main(void) {
 	Bh1750__thread_start();
 	Ml8511__thread_start();
 	Power__thread_start();
+	Wind__thread_start();
 	HC12__thread_start();
+	Rain__thread_start();
 	Shell__thread_init(&shellCfgUart1);
 	///////////////////////////////////////////////////////////////
 

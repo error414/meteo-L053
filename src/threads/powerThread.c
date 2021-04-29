@@ -4,6 +4,8 @@
 #include "powerThread.h"
 #include "hwListThread.h"
 #include "scheduleListThread.h"
+#include "pools.h"
+#include "msp.h"
 
 #define POWER_VOLTAGE_SOLAR 0
 #define POWER_VOLTAGE_BATT  1
@@ -55,14 +57,16 @@ static THD_FUNCTION(powerThread, arg) {
 	powerHW.values[POWER_VOLTAGE_BATT].formatter = VALUE_FORMATTER_100;
 	powerHW.values[POWER_VOLTAGE_BATT].name = "Voltage BATT";
 
-	powerHW.values[POWER_CHRG_STATUS].formatter = VALUE_FORMATTER_NONE;
+	powerHW.values[POWER_CHRG_STATUS].formatter = VALUE_FORMATTER_BOOL;
 	powerHW.values[POWER_CHRG_STATUS].name = "Chrg";
 
-	powerHW.values[POWER_STDBY_STATUS].formatter = VALUE_FORMATTER_NONE;
+	powerHW.values[POWER_STDBY_STATUS].formatter = VALUE_FORMATTER_BOOL;
 	powerHW.values[POWER_STDBY_STATUS].name = "Stdby";
 	(void) chMBPostTimeout(&registerHwMail, (msg_t) &powerHW, TIME_IMMEDIATE);
 	///////////////////////////////////////////////////////////////
 
+	systime_t lastRunTime = chVTGetSystemTime();
+	uint32_t streamBuff[4];
 	while (true) {
 
 		adcAcquireBus(powerThreadCfg->adcDriver);
@@ -73,17 +77,25 @@ static THD_FUNCTION(powerThread, arg) {
 
 		if(msg == MSG_OK){
 			chSysLock();
-			powerHW.values[POWER_VOLTAGE_SOLAR].value   = (uint32_t)((float)(8.152f / (4096.0f / (double)adcPowerSamples[0])) * 100);
-			powerHW.values[POWER_VOLTAGE_BATT].value    = (uint32_t)((float)(6.6f / (4096.0f / (double)adcPowerSamples[1])) * 100);
-			powerHW.values[POWER_CHRG_STATUS].value     = !palReadLine(powerThreadCfg->chrgInfoLine);
-			powerHW.values[POWER_STDBY_STATUS].value    = !palReadLine(powerThreadCfg->stdbyInfoLine);
+			streamBuff[0] = powerHW.values[POWER_VOLTAGE_SOLAR].value   = (uint32_t)((float)(8.152f / (4096.0f / (double)adcPowerSamples[0])) * 100);
+			streamBuff[1] = powerHW.values[POWER_VOLTAGE_BATT].value    = (uint32_t)((float)(6.6f / (4096.0f / (double)adcPowerSamples[1])) * 100);
+			streamBuff[2] = powerHW.values[POWER_CHRG_STATUS].value     = !palReadLine(powerThreadCfg->chrgInfoLine);
+			streamBuff[3] = powerHW.values[POWER_STDBY_STATUS].value    = !palReadLine(powerThreadCfg->stdbyInfoLine);
 			powerHW.status = HW_STATUS_OK;
 			chSysUnlock();
+
+			if(chVTGetSystemTime() - lastRunTime > interval){
+				poolStreamObject_t* messagePoolObject = (poolStreamObject_t *) chPoolAlloc(&streamMemPool);
+				if (messagePoolObject) {
+					MSP__createMspFrame(messagePoolObject, (uint8_t)powerHW.id, 3, (uint32_t*)&streamBuff);
+					chMBPostTimeout(&streamMail, (msg_t) messagePoolObject, TIME_IMMEDIATE);
+				}
+				lastRunTime = chVTGetSystemTime();
+			}
+
 		}else{
 			powerHW.status = HW_STATUS_ERROR;
 		}
-
-		chThdSleepMilliseconds(interval);
 	}
 }
 
@@ -109,20 +121,3 @@ void Power__thread_start(void) {
 void Power__thread_setInterval(uint16_t i) {
 	interval = i;
 }
-
-/**
- *
- * @param arg
- *//*
-static void Power__chrg_it(void *arg) {
-
-}*/
-
-/**
- *
- * @param arg
- */
-/*
-static void Power__stdby_it(void *arg) {
-
-}*/
