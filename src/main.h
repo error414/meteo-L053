@@ -21,14 +21,6 @@
 
 #define CONFIG_BASE_ADDR 0
 #define VERSION 1
-#define DEFAULT_INTERVAL 10
-
-#define BMP280_HW_ID 1
-#define BH1750_HW_ID 2
-#define ML8511_HW_ID 3
-#define POWER_HW_ID 4
-#define WIND_HW_ID 5
-#define RAIN_HW_ID 6
 
 typedef struct {
 	uint8_t version;

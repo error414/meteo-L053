@@ -10,6 +10,7 @@ extern const ADCConversionGroup adcgrpcfgRain;
 void lpuart_init(void);
 void uart1_init(void);
 void i2c1_init(void);
+void power_GPIO_init(void);
 void adc_power_init(void);
 void adc_device1_init(void);
 void adc_device2_init(void);

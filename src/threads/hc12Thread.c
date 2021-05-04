@@ -52,8 +52,8 @@ static THD_FUNCTION(hc12StreamThread, arg) {
 				continue;
 			}
 			chnWriteTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&pbuf->message, pbuf->size, 5000);
-			pbuf->message[0] = 0x0a;
-			pbuf->message[1] = 0x0d;
+			pbuf->message[0] = 0x0a; //end of line
+			pbuf->message[1] = 0x0d; //end of line
 			chnWriteTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&pbuf->message, 2, 5000);
 			chThdSleepMilliseconds(50);
 			chPoolFree(&streamMemPool, pbuf);
