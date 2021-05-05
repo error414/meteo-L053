@@ -117,14 +117,14 @@ int main(void) {
 #endif
 
 #ifdef USE_SHELL
-	const ShellConfig shellCfgUart1 = {
+	const ShellConfig shellCfgUart = {
 			(BaseSequentialStream *)&SD1,
 			shellCommands
 	};
 #endif
 
 	const hc12ThreadCfg_t hc12ThreadCfg = {
-			.hwId = 0,
+			.hwId = HC12_HW_ID,
 			.lineSet = LINE_GPIOC_11,
 			.sc_channel = (BaseChannel*)&LPSD1
 	};
@@ -218,7 +218,7 @@ int main(void) {
 	Wind__thread_start();
 #endif
 #ifdef USE_SHELL
-	Shell__thread_init(&shellCfgUart1);
+	Shell__thread_init(&shellCfgUart);
 	///////////////////////////////////////////////////////////////
 	while (true) {
 		chThdSleepMilliseconds(10000);

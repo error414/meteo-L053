@@ -20,12 +20,16 @@ static THD_FUNCTION(hc12StreamThread, arg) {
 	(void) arg;
 	chRegSetThreadName("hc12Stream");
 
+	///////////////////////////////////////////////////////////////
+	// REGISTER HW
+	///////////////////////////////////////////////////////////////
 	hc12HW.id = hc12State.threadCfg->hwId;
 	hc12HW.type = VALUE_TYPE_TRANSMITTER;
 	hc12HW.name = "HC12";
 	hc12HW.status = HW_STATUS_UNKNOWN;
 
 	(void) chMBPostTimeout(&registerHwMail, (msg_t) &hc12HW, TIME_IMMEDIATE);
+	///////////////////////////////////////////////////////////////
 
 	HC12__thread_normalMode();
 
@@ -70,7 +74,7 @@ static THD_FUNCTION(hc12StreamThread, arg) {
 void HC12__thread_init(const hc12ThreadCfg_t *_threadCfg, hc12cfg_t *_hc12Cfg) {
 	hc12State.status = HC12_STATUS_NOK;
 
-	palSetLineMode(LINE_GPIOC_11, PAL_STM32_MODE_OUTPUT);
+	palSetLineMode(_threadCfg->lineSet, PAL_STM32_MODE_OUTPUT);
 
 	hc12State.threadCfg = _threadCfg;
 	hc12State.hc12Cfg   = _hc12Cfg;
@@ -131,57 +135,126 @@ bool HC12__thread_reconfigure(hc12cfg_t *cfg, BaseSequentialStream *outStream) {
 		return false;
 	}
 
-	msg_t msg = chBSemWaitTimeout(&hc12State.uart_bsem, 500);
-	if(msg != MSG_OK){
+	if(chBSemWaitTimeout(&hc12State.uart_bsem, 1000) != MSG_OK){
 		return false;
 	}
 
 	HC12__thread_progMode();
+	while(chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff, 1, TIME_IMMEDIATE)){};
+	systime_t timeout;
+	uint8_t index;
 
 
 	chprintf((BaseSequentialStream*)hc12State.threadCfg->sc_channel, HC12_AT_CHANNEL, cfg->channel);
 	chprintf(outStream, HC12_AT_CHANNEL, cfg->channel);
 	chprintf(outStream, NEWLINE_STR);
-	while(chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff, 1, HC12_WAIT_TO_ANSWER_TIMEOUT) != 0){
-		chprintf(outStream, "%c", hc12State.rxBuff[0], 1);
+
+	timeout = chVTGetSystemTime();
+	index = 0;
+	while(true){
+		if(chVTGetSystemTime() - timeout > 1000){
+			HC12__thread_normalMode();
+			chBSemSignal(&hc12State.uart_bsem);
+			return false;
+		}
+
+		if(chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff[index], 1, TIME_IMMEDIATE) != 0){
+			chprintf(outStream, "%c", hc12State.rxBuff[index], 1);
+			if(index > 1 && hc12State.rxBuff[index - 1] == 0x0d && hc12State.rxBuff[index] == 0x0a){
+				break;
+			}
+			index++;
+		}
 	}
+
 	chprintf(outStream, NEWLINE_STR);
 	chThdSleepMilliseconds(10);
 
-
+	///////////////////////////////////////////////////////////////////////////////////////////////////
 	chprintf((BaseSequentialStream*)hc12State.threadCfg->sc_channel, HC12_AT_BAUD, cfg->baud);
 	chprintf(outStream, HC12_AT_BAUD, cfg->baud);
 	chprintf(outStream, NEWLINE_STR);
-	while(chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff, 1, HC12_WAIT_TO_ANSWER_TIMEOUT) != 0){
-		chprintf(outStream, "%c", hc12State.rxBuff[0], 1);
+
+
+	timeout = chVTGetSystemTime();
+	index = 0;
+	while(true){
+		if(chVTGetSystemTime() - timeout > 1000){
+			HC12__thread_normalMode();
+			chBSemSignal(&hc12State.uart_bsem);
+			return false;
+		}
+
+		if(chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff[index], 1, TIME_IMMEDIATE) != 0){
+			chprintf(outStream, "%c", hc12State.rxBuff[index], 1);
+			if(index > 1 && hc12State.rxBuff[index - 1] == 0x0d && hc12State.rxBuff[index] == 0x0a){
+				break;
+			}
+			index++;
+		}
 	}
+
 	chprintf(outStream, NEWLINE_STR);
 	chThdSleepMilliseconds(10);
 
+	///////////////////////////////////////////////////////////////////////////////////////////////////
 	chprintf((BaseSequentialStream*)hc12State.threadCfg->sc_channel, HC12_AT_MODE_FU, cfg->modeFU);
 	chprintf(outStream, HC12_AT_MODE_FU, cfg->modeFU);
 	chprintf(outStream, NEWLINE_STR);
-	while(chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff, 1, HC12_WAIT_TO_ANSWER_TIMEOUT) != 0){
-		chprintf(outStream, "%c", hc12State.rxBuff[0], 1);
+
+
+	timeout = chVTGetSystemTime();
+	index = 0;
+	while(true){
+		if(chVTGetSystemTime() - timeout > 1000){
+			HC12__thread_normalMode();
+			chBSemSignal(&hc12State.uart_bsem);
+			return false;
+		}
+
+		if(chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff[index], 1, TIME_IMMEDIATE) != 0){
+			chprintf(outStream, "%c", hc12State.rxBuff[index], 1);
+			if(index > 1 && hc12State.rxBuff[index - 1] == 0x0d && hc12State.rxBuff[index] == 0x0a){
+				break;
+			}
+			index++;
+		}
 	}
+
 	chprintf(outStream, NEWLINE_STR);
 	chThdSleepMilliseconds(10);
 
+
+	///////////////////////////////////////////////////////////////////////////////////////////////////
 	chprintf((BaseSequentialStream*)hc12State.threadCfg->sc_channel, HC12_AT_POWER, cfg->power);
 	chprintf(outStream, HC12_AT_POWER, cfg->power);
 	chprintf(outStream, NEWLINE_STR);
-	while(chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff, 1, HC12_WAIT_TO_ANSWER_TIMEOUT) != 0){
-		chprintf(outStream, "%c", hc12State.rxBuff[0], 1);
+
+
+	timeout = chVTGetSystemTime();
+	index = 0;
+	while(true){
+		if(chVTGetSystemTime() - timeout > 1000){
+			HC12__thread_normalMode();
+			chBSemSignal(&hc12State.uart_bsem);
+			return false;
+		}
+
+		if(chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff[index], 1, TIME_IMMEDIATE) != 0){
+			chprintf(outStream, "%c", hc12State.rxBuff[index], 1);
+			if(index > 1 && hc12State.rxBuff[index - 1] == 0x0d && hc12State.rxBuff[index] == 0x0a){
+				break;
+			}
+			index++;
+		}
 	}
+
 	chprintf(outStream, NEWLINE_STR);
 	chThdSleepMilliseconds(10);
 
 	hc12State.hc12Cfg = cfg;
-	palSetLine(hc12State.threadCfg->lineSet);
-
+	HC12__thread_normalMode();
 	chBSemSignal(&hc12State.uart_bsem);
-
-	HC12__thread_goToSleep();
 
 	return true;
 }

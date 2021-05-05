@@ -2,6 +2,8 @@
 #include "main.h"
 #include "ml8511Thread.h"
 #include "ml8511.h"
+#include "pools.h"
+#include "msp.h"
 #include "hwListThread.h"
 #include "scheduleListThread.h"
 
@@ -15,11 +17,12 @@ static uint16_t     interval;
 
 void Ml8511__thread_setInterval(uint16_t i);
 
-static THD_WORKING_AREA(ML8511VA, 50);
+static THD_WORKING_AREA(ML8511VA, 70);
 static THD_FUNCTION(ML8511Thread, arg) {
 	(void) arg;
 	chRegSetThreadName("Ml8511");
 
+	uint32_t streamBuff[1];
 	float uvLight;
 
 	driverCfg.adcGroup         = ml8511ThreadCfg->adcGroup;
@@ -58,9 +61,16 @@ static THD_FUNCTION(ML8511Thread, arg) {
 		uvLight = ML8511_getUV();
 		if(uvLight > 0.0f){
 			chSysLock();
-			ml8511HW.values[ML8511_UV].value = (uint32_t)(uvLight * 100);
+			streamBuff[0] = ml8511HW.values[ML8511_UV].value = (uint32_t)(uvLight * 100);
 			ml8511HW.status = HW_STATUS_OK;
 			chSysUnlock();
+
+			poolStreamObject_t* messagePoolObject = (poolStreamObject_t *) chPoolAlloc(&streamMemPool);
+			if (messagePoolObject) {
+				MSP__createMspFrame(messagePoolObject, (uint8_t)ml8511HW.id, 1, (uint32_t*)&streamBuff);
+				chMBPostTimeout(&streamMail, (msg_t) messagePoolObject, TIME_IMMEDIATE);
+			}
+
 		}else{
 			ml8511HW.status = HW_STATUS_ERROR;
 		}

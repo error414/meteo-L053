@@ -194,7 +194,7 @@ static void cmd_values(BaseSequentialStream *chp, int argc, char *argv[]){
 
 						float value = (float)hwList[i]->values[ii].value;
 						if(hwList[i]->values[ii].formatter == VALUE_FORMATTER_100){
-							value /= 100;
+							value = ((float)value / 100.0f) - 100;
 						}
 						chprintf(chp, "%15s: %.2f  " SHELL_NEWLINE_STR,
 						         hwList[i]->values[ii].name,

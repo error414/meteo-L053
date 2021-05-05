@@ -24,7 +24,7 @@ static THD_FUNCTION(BH1750Thread, arg) {
 	(void) arg;
 	chRegSetThreadName("Bh1750");
 
-	uint32_t streamBuff[5];
+	uint32_t streamBuff[1];
 
 	///////////////////////////////////////////////////////////////
 	// REGISTER SCHEDULE

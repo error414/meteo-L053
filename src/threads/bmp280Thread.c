@@ -70,11 +70,10 @@ static THD_FUNCTION(Bmp280Thread, arg) {
 		}
 
 		if(BMP280_read_float(&BMP280_dev, &temperature, &pressure, &humidity)){
-
 			chSysLock();
-			streamBuff[0] = bmp280HW.values[BMP280_TEMP].value   = (uint32_t)(temperature * 100.0F);
+			streamBuff[0] = bmp280HW.values[BMP280_TEMP].value   = (uint32_t)((temperature + 100.0f) * 100.0f);
 			streamBuff[1] = bmp280HW.values[BMP280_HUM].value       = (uint32_t)humidity;
-			streamBuff[2] = bmp280HW.values[BMP280_PRESSURE].value  = (uint32_t)pressure;
+			streamBuff[2] = bmp280HW.values[BMP280_PRESSURE].value  = (uint32_t)(pressure / 100);
 							bmp280HW.status = HW_STATUS_OK;
 			chSysUnlock();
 

@@ -49,7 +49,7 @@ static THD_FUNCTION(rainThread, arg) {
 	(void) chMBPostTimeout(&registerHwMail, (msg_t) &rainHW, TIME_IMMEDIATE);
 	///////////////////////////////////////////////////////////////
 
-	uint32_t streamBuff[4];
+	uint32_t streamBuff[1];
 	while (true) {
 
 		adcAcquireBus(rainThreadCfg->adcDriver);
@@ -60,13 +60,13 @@ static THD_FUNCTION(rainThread, arg) {
 
 		if(msg == MSG_OK){
 			chSysLock();
-			streamBuff[0] = rainHW.values[RAIN_STATUS].value = adcRainSamples[0] < 1500 ? 1 : 0;
+			streamBuff[0] = rainHW.values[RAIN_STATUS].value = adcRainSamples[0] < 3400 ? 1 : 0;
 			rainHW.status = HW_STATUS_OK;
 			chSysUnlock();
 
 			poolStreamObject_t* messagePoolObject = (poolStreamObject_t *) chPoolAlloc(&streamMemPool);
 			if (messagePoolObject) {
-				MSP__createMspFrame(messagePoolObject, (uint8_t)rainHW.id, 3, (uint32_t*)&streamBuff);
+				MSP__createMspFrame(messagePoolObject, (uint8_t)rainHW.id, 1, (uint32_t*)&streamBuff);
 				chMBPostTimeout(&streamMail, (msg_t) messagePoolObject, TIME_IMMEDIATE);
 			}
 
