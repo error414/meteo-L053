@@ -9,13 +9,13 @@
 #define RAIN_NAME "Rain"
 
 typedef struct {
-	uint32_t hwId;
+	const uint32_t hwId;
 	const ADCConversionGroup *adcGroup;
 	ADCDriver *adcDriver;
-	uint32_t interval;
+	uint16_t interval; //second
 } rain__threadConfig_t;
 
-void Rain__thread_init(const rain__threadConfig_t *cfg);
+void Rain__thread_init(rain__threadConfig_t *cfg);
 void Rain__thread_start(void);
 
 #endif

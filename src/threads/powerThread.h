@@ -9,16 +9,15 @@
 #define POWER_NAME "Power"
 
 typedef struct {
-	uint32_t hwId;
+	const uint32_t hwId;
 	const ADCConversionGroup *adcGroup;
 	ADCDriver *adcDriver;
-	uint32_t interval;
+	uint16_t interval; //second
 	uint32_t chrgInfoLine;
 	uint32_t stdbyInfoLine;
-	uint32_t chargeEnLine;
 } power__threadConfig_t;
 
-void Power__thread_init(const power__threadConfig_t *cfg);
+void Power__thread_init(power__threadConfig_t *cfg);
 void Power__thread_start(void);
 
 #endif

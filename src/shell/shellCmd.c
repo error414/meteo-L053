@@ -138,7 +138,7 @@ static void cmd_sch(BaseSequentialStream *chp, int argc, char *argv[]){
 		uint8_t intervalI   = (uint8_t)atoi(argv[1]);
 
 		if(id > 0 && id < SCHEDULE_LIST_SIZE && scheduleList[id] && intervalI > 0){
-			scheduleList[id]->setInterval(intervalI * 1000);
+			chMsgSend(scheduleList[id]->tp, intervalI);
 			appConfiguration.interval[id] = intervalI;
 		}
 	}
@@ -149,10 +149,10 @@ static void cmd_sch(BaseSequentialStream *chp, int argc, char *argv[]){
 
 	for(uint8_t i = 0; i < SCHEDULE_LIST_SIZE; i++){
 		if(scheduleList[i]){
-			chprintf(chp, "%6u  %11s  %6us" SHELL_NEWLINE_STR,
+			chprintf(chp, "%6u  %11s  %6u seconds" SHELL_NEWLINE_STR,
 			         scheduleList[i]->id,
 			         scheduleList[i]->name,
-			         *scheduleList[i]->interval / 1000
+			         *scheduleList[i]->interval
 			);
 		}
 	}
@@ -193,8 +193,10 @@ static void cmd_values(BaseSequentialStream *chp, int argc, char *argv[]){
 					}else{
 
 						float value = (float)hwList[i]->values[ii].value;
-						if(hwList[i]->values[ii].formatter == VALUE_FORMATTER_100){
+						if(hwList[i]->values[ii].formatter == VALUE_FORMATTER_100_P100){
 							value = ((float)value / 100.0f) - 100;
+						}else if(hwList[i]->values[ii].formatter == VALUE_FORMATTER_100){
+							value = ((float)value / 100.0f);
 						}
 						chprintf(chp, "%15s: %.2f  " SHELL_NEWLINE_STR,
 						         hwList[i]->values[ii].name,
@@ -217,7 +219,7 @@ static void cmd_values(BaseSequentialStream *chp, int argc, char *argv[]){
 static void cmd_hc12Set(BaseSequentialStream *chp, int argc, char *argv[]){
 	(void)argv;
 
-	if(!HC12__thread_reconfigureDefault(chp)){
+	if(!HC12__reconfigureDefault(chp)){
 		chprintf(chp, "ERROR" SHELL_NEWLINE_STR);
 	}
 }

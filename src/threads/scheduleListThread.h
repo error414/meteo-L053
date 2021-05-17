@@ -5,17 +5,15 @@
 
 #define  SCHEDULE_LIST_SIZE           10
 
-#define SCHEDULE_STATUS_LIST "UNKNOWN", "RUN", "STOPPED"
 
+typedef msg_t scheduleInterval;
 
 typedef struct {
 	uint32_t    id;
 	thread_t    *tp;
 	const char  *name;
 	uint16_t    *interval;
-	void (*setInterval)(uint16_t interval);
 } schedule_t;
-
 
 extern mailbox_t registerScheduleMail;
 

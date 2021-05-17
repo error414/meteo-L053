@@ -14,6 +14,10 @@ void power_GPIO_init(void);
 void adc_power_init(void);
 void adc_device1_init(void);
 void adc_device2_init(void);
+#ifdef USE_WIND_SPEED
 void device_wind_init(void);
+#endif
+#ifdef USE_RAIN_FC37
 void adc_rain_init(void);
+#endif
 #endif

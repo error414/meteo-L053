@@ -11,13 +11,10 @@
 #define BMP280_PRESSURE 2
 
 static BMP280_HandleTypedef BMP280_dev;
-static const Bmp280__threadConfig_t *bmp280ThreadCfg;
+static Bmp280__threadConfig_t *bmp280ThreadCfg;
 
 static hw_t         bmp280HW;
 static schedule_t   bmp280Schedule;
-static uint16_t     interval;
-
-void Bmp280__thread_setInterval(uint16_t interval);
 
 static THD_WORKING_AREA(BMP280VA, 260);
 static THD_FUNCTION(Bmp280Thread, arg) {
@@ -32,10 +29,10 @@ static THD_FUNCTION(Bmp280Thread, arg) {
 	///////////////////////////////////////////////////////////////
 	// REGISTER SCHEDULE
 	///////////////////////////////////////////////////////////////
-	bmp280Schedule.id = bmp280ThreadCfg->hwId;
-	bmp280Schedule.name = BM280_NAME;
-	bmp280Schedule.interval = &interval;
-	bmp280Schedule.setInterval = &Bmp280__thread_setInterval;
+	bmp280Schedule.id       = bmp280ThreadCfg->hwId;
+	bmp280Schedule.name     = BM280_NAME;
+	bmp280Schedule.interval = &bmp280ThreadCfg->interval;
+	bmp280Schedule.tp       = chThdGetSelfX();
 
 	(void) chMBPostTimeout(&registerScheduleMail, (msg_t) &bmp280Schedule, TIME_IMMEDIATE);
 	chThdSleepMilliseconds(1000); //wait for stabilise all values
@@ -49,7 +46,7 @@ static THD_FUNCTION(Bmp280Thread, arg) {
 	bmp280HW.name = BM280_NAME;
 	bmp280HW.status = (bool)BMP280_init(&BMP280_dev, &BMP280_dev.params); //test HW
 
-	bmp280HW.values[BMP280_TEMP].formatter = VALUE_FORMATTER_100;
+	bmp280HW.values[BMP280_TEMP].formatter = VALUE_FORMATTER_100_P100;
 	bmp280HW.values[BMP280_TEMP].name = "Tempeature";
 
 	bmp280HW.values[BMP280_HUM].formatter = VALUE_FORMATTER_NONE;
@@ -86,21 +83,23 @@ static THD_FUNCTION(Bmp280Thread, arg) {
 			bmp280HW.status = HW_STATUS_ERROR;
 		}
 
-		chThdSleepMilliseconds(interval);
+		//load new configuration if needed
+		thread_t *tp = chMsgWaitTimeout(bmp280ThreadCfg->interval * 1000);
+		if(tp){
+			bmp280ThreadCfg->interval = (uint16_t)chMsgGet(tp);
+			chMsgRelease(tp, MSG_OK);
+		}
 	}
 }
 
 /**
  *
  */
-void Bmp280__thread_init(const Bmp280__threadConfig_t *cfg) {
+void Bmp280__thread_init(Bmp280__threadConfig_t *cfg) {
 	BMP280_dev.i2c = cfg->driver;
 	BMP280_dev.addr = BMP280_I2C_ADDRESS_0;
 
 	BMP280_init_default_params(&BMP280_dev.params);
-
-	interval = cfg->interval;
-
 	bmp280ThreadCfg = cfg;
 }
 
@@ -109,11 +108,4 @@ void Bmp280__thread_init(const Bmp280__threadConfig_t *cfg) {
  */
 void Bmp280__thread_start(void) {
 	chThdCreateStatic(BMP280VA, sizeof(BMP280VA), THREAD_PRIORITY_BMP280, Bmp280Thread,NULL);
-}
-
-/**
- *
- */
-void Bmp280__thread_setInterval(uint16_t i) {
-	interval = i;
 }

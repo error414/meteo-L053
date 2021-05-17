@@ -47,6 +47,7 @@ appConfiguration_t appConfiguration;
 int main(void) {
 	halInit();
 	chSysInit();
+
 #ifdef USE_SHELL
 	shellInit();
 #endif
@@ -72,29 +73,29 @@ int main(void) {
 	//CONFIGURATION
 	///////////////////////////////////////////////////////////////
 #ifdef USE_BMP280
-	const Bmp280__threadConfig_t bmp280Cfg = {
+	Bmp280__threadConfig_t bmp280Cfg = {
 			.hwId = BMP280_HW_ID,
 			.driver = &I2CD1,
 			.enablePinLine = BMP280_ENABLE_PIN,
-			.interval = appConfiguration.interval[BMP280_HW_ID] > 0 ? appConfiguration.interval[BMP280_HW_ID] * 1000 : BMP280_DEFAULT_INTERVAL * 1000,
+			.interval = appConfiguration.interval[BMP280_HW_ID] > 0 ? appConfiguration.interval[BMP280_HW_ID] : BMP280_DEFAULT_INTERVAL,
 	};
 #endif
 
 #ifdef USE_BH1750
-	const BH1750__threadConfig_t bh1750Cfg = {
+	BH1750__threadConfig_t bh1750Cfg = {
 			.hwId = BH1750_HW_ID,
 			.driver = &I2CD1,
 			.enablePinLine = BH1750_ENABLE_PIN,
-			.interval = appConfiguration.interval[BH1750_HW_ID] > 0 ? appConfiguration.interval[BH1750_HW_ID] * 1000 : BH1750_DEFAULT_INTERVAL * 1000,
+			.interval = appConfiguration.interval[BH1750_HW_ID] > 0 ? appConfiguration.interval[BH1750_HW_ID] : BH1750_DEFAULT_INTERVAL,
 	};
 #endif
 
 #ifdef USE_ML8511
-	const ML8511__threadConfig_t ml8511Cfg = {
+	ML8511__threadConfig_t ml8511Cfg = {
 			.hwId = ML8511_HW_ID,
-			.adcGroup = &adcgrpcfgDevice2,
+			.adcGroup = &adcgrpcfgDevice1,
 			.adcDriver = &ADCD1,
-			.interval = appConfiguration.interval[ML8511_HW_ID] > 0 ? appConfiguration.interval[ML8511_HW_ID] * 1000 : ML8511_DEFAULT_INTERVAL * 1000,
+			.interval = appConfiguration.interval[ML8511_HW_ID] > 0 ? appConfiguration.interval[ML8511_HW_ID] : ML8511_DEFAULT_INTERVAL,
 			.driverEnableLine = ML8511_ENABLE_PIN
 	};
 #endif
@@ -124,19 +125,19 @@ int main(void) {
 #endif
 
 	const hc12ThreadCfg_t hc12ThreadCfg = {
-			.hwId = HC12_HW_ID,
-			.lineSet = LINE_GPIOC_11,
-			.sc_channel = (BaseChannel*)&LPSD1
+			.hwId           = HC12_HW_ID,
+			.lineSet        = LINE_GPIOC_11,
+			.enableLine     = LINE_GPIOC_10,
+			.sc_channel     = (BaseChannel*)&LPSD1
 	};
 
-	const power__threadConfig_t powerCfg = {
-			.hwId = POWER_HW_ID,
-			.adcGroup = &adcgrpcfgPower,
-			.adcDriver = &ADCD1,
-			.chargeEnLine   = LINE_GPIOC_1,
-			.chrgInfoLine   = LINE_GPIOB_10,
-			.stdbyInfoLine  = LINE_GPIOB_11,
-			.interval = appConfiguration.interval[POWER_HW_ID] > 0 ? appConfiguration.interval[POWER_HW_ID] * 1000 : DEFAULT_TASK_INTERVAL * 1000,
+	power__threadConfig_t powerCfg = {
+			.hwId               = POWER_HW_ID,
+			.adcGroup           = &adcgrpcfgPower,
+			.adcDriver          = &ADCD1,
+			.chrgInfoLine       = LINE_GPIOB_10,
+			.stdbyInfoLine      = LINE_GPIOB_11,
+			.interval           = appConfiguration.interval[POWER_HW_ID] > 0 ? appConfiguration.interval[POWER_HW_ID] : DEFAULT_TASK_INTERVAL,
 	};
 
 	static hc12cfg_t hc12cfg = {

@@ -55,6 +55,10 @@ static uint8_t rx_buff[2];
 static uint8_t tx_buff;
 static uint8_t tx_buff2[2];
 
+/**
+ *
+ * @param params
+ */
 void BMP280_init_default_params(bmp280_params_t *params) {
 	params->mode = BMP280_MODE_NORMAL;
 	params->filter = BMP280_FILTER_OFF;
@@ -64,6 +68,13 @@ void BMP280_init_default_params(bmp280_params_t *params) {
 	params->standby = BMP280_STANDBY_250;
 }
 
+/**
+ *
+ * @param dev
+ * @param addr
+ * @param value
+ * @return
+ */
 static bool BMP280_read_register16(BMP280_HandleTypedef *dev, uint8_t addr, uint16_t *value) {
 	i2cAcquireBus(dev->i2c);
 	if(dev->i2c->state != I2C_READY){
@@ -82,6 +93,14 @@ static bool BMP280_read_register16(BMP280_HandleTypedef *dev, uint8_t addr, uint
 	}
 }
 
+/**
+ *
+ * @param dev
+ * @param addr
+ * @param value
+ * @param len
+ * @return
+ */
 static bool BMP280_read_data(BMP280_HandleTypedef *dev, uint8_t addr, uint8_t *value, uint8_t len) {
 	i2cAcquireBus(dev->i2c);
 
@@ -100,6 +119,13 @@ static bool BMP280_read_data(BMP280_HandleTypedef *dev, uint8_t addr, uint8_t *v
 	}
 }
 
+/**
+ *
+ * @param dev
+ * @param addr
+ * @param value
+ * @return
+ */
 static int BMP280_write_register8(BMP280_HandleTypedef *dev, uint8_t addr, uint8_t value) {
 	i2cAcquireBus(dev->i2c);
 	if(dev->i2c->state != I2C_READY){
@@ -118,6 +144,11 @@ static int BMP280_write_register8(BMP280_HandleTypedef *dev, uint8_t addr, uint8
 	}
 }
 
+/**
+ *
+ * @param dev
+ * @return
+ */
 static bool BMP280_read_calibration_data(BMP280_HandleTypedef *dev) {
 
 	if (BMP280_read_register16(dev, 0x88, &dev->dig_T1)
@@ -140,6 +171,11 @@ static bool BMP280_read_calibration_data(BMP280_HandleTypedef *dev) {
 	return false;
 }
 
+/**
+ *
+ * @param dev
+ * @return
+ */
 static bool BMP280_read_hum_calibration_data(BMP280_HandleTypedef *dev) {
 	uint16_t h4, h5;
 
@@ -158,6 +194,12 @@ static bool BMP280_read_hum_calibration_data(BMP280_HandleTypedef *dev) {
 	return false;
 }
 
+/**
+ *
+ * @param dev
+ * @param params
+ * @return
+ */
 bool BMP280_init(BMP280_HandleTypedef *dev, bmp280_params_t *params) {
 
 	if (dev->addr != BMP280_I2C_ADDRESS_0
@@ -183,6 +225,9 @@ bool BMP280_init(BMP280_HandleTypedef *dev, bmp280_params_t *params) {
 	// Wait until finished copying over the NVP data.
 	while (1) {
 		uint8_t status;
+		if(dev->i2c->state != I2C_READY){
+			return false;
+		}
 		if (BMP280_read_data(dev, BMP280_REG_STATUS, &status, 1) && (status & 1) == 0){
 			break;
 		}
@@ -223,6 +268,11 @@ bool BMP280_init(BMP280_HandleTypedef *dev, bmp280_params_t *params) {
 	return true;
 }
 
+/**
+ *
+ * @param dev
+ * @return
+ */
 bool BMP280_force_measurement(BMP280_HandleTypedef *dev) {
 	uint8_t ctrl;
 	if (!BMP280_read_data(dev, BMP280_REG_CTRL, &ctrl, 1)){
@@ -237,6 +287,11 @@ bool BMP280_force_measurement(BMP280_HandleTypedef *dev) {
 	return true;
 }
 
+/**
+ *
+ * @param dev
+ * @return
+ */
 bool BMP280_is_measuring(BMP280_HandleTypedef *dev) {
 	uint8_t status;
 	if (!BMP280_read_data(dev, BMP280_REG_STATUS, &status, 1)){
@@ -356,6 +411,14 @@ bool BMP280_read_fixed(BMP280_HandleTypedef *dev, int32_t *temperature, uint32_t
 	return true;
 }
 
+/**
+ *
+ * @param dev
+ * @param temperature
+ * @param pressure
+ * @param humidity
+ * @return
+ */
 bool BMP280_read_float(BMP280_HandleTypedef *dev, float *temperature, float *pressure, float *humidity) {
 	int32_t fixed_temperature;
 	uint32_t fixed_pressure;

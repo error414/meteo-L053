@@ -6,10 +6,9 @@
 
 #define WIND_VOLTAGE_SOLAR 0
 
-static const wind__threadConfig_t *windThreadCfg;
+static wind__threadConfig_t *windThreadCfg;
 static hw_t windHW;
 static schedule_t   windSchedule;
-static uint16_t     interval;
 volatile uint32_t windSpeedCount = 0;
 
 void Wind__thread_setInterval(uint16_t i);
@@ -26,10 +25,10 @@ static THD_FUNCTION(windThread, arg) {
 	///////////////////////////////////////////////////////////////
 	// REGISTER SCHEDULE
 	///////////////////////////////////////////////////////////////
-	windSchedule.id = windThreadCfg->hwId;
-	windSchedule.name = WIND_NAME;
-	windSchedule.interval = &interval;
-	windSchedule.setInterval = &Wind__thread_setInterval;
+	windSchedule.id         = windThreadCfg->hwId;
+	windSchedule.name       = WIND_NAME;
+	windSchedule.interval   = &windThreadCfg->interval;
+	windSchedule.tp         = chThdGetSelfX();
 
 	(void) chMBPostTimeout(&registerScheduleMail, (msg_t) &windSchedule, TIME_IMMEDIATE);
 	///////////////////////////////////////////////////////////////
@@ -63,16 +62,20 @@ static THD_FUNCTION(windThread, arg) {
 		windSpeedCount = 0;
 		chSysUnlock();
 
-		chThdSleepMilliseconds(interval);
+		//load new configuration if needed
+		thread_t *tp = chMsgWaitTimeout(windThreadCfg->interval * 1000);
+		if(tp){
+			windThreadCfg->interval = (uint16_t)chMsgGet(tp);
+			chMsgRelease(tp, MSG_OK);
+		}
 	}
 }
 
 /**
  *
  */
-void Wind__thread_init(const wind__threadConfig_t *cfg) {
+void Wind__thread_init(wind__threadConfig_t *cfg) {
 	windThreadCfg = cfg;
-	interval = windThreadCfg->interval;
 }
 
 /**
@@ -80,13 +83,6 @@ void Wind__thread_init(const wind__threadConfig_t *cfg) {
  */
 void Wind__thread_start(void) {
 	chThdCreateStatic(WINDVA, sizeof(WINDVA), THREAD_PRIORITY_WIND, windThread,NULL);
-}
-
-/**
- *
- */
-void Wind__thread_setInterval(uint16_t i) {
-	interval = i;
 }
 
 /**

@@ -9,13 +9,10 @@
 
 #define RAIN_STATUS 0
 
-static const rain__threadConfig_t *rainThreadCfg;
+static rain__threadConfig_t *rainThreadCfg;
 static adcsample_t adcRainSamples[ADC_RAIN_GRP_CHARGE_NUM_CHANNELS * ADC_RAIN_GRP_CHARGEBUF_DEPTH];
 static hw_t rainHW;
 static schedule_t   rainSchedule;
-static uint16_t     interval;
-
-void Rain__thread_setInterval(uint16_t i);
 
 static THD_WORKING_AREA(RAINVA, 70);
 static THD_FUNCTION(rainThread, arg) {
@@ -26,10 +23,10 @@ static THD_FUNCTION(rainThread, arg) {
 	///////////////////////////////////////////////////////////////
 	// REGISTER SCHEDULE
 	///////////////////////////////////////////////////////////////
-	rainSchedule.id = rainThreadCfg->hwId;
-	rainSchedule.name = RAIN_NAME;
-	rainSchedule.interval = &interval;
-	rainSchedule.setInterval = &Rain__thread_setInterval;
+	rainSchedule.id         = rainThreadCfg->hwId;
+	rainSchedule.name       = RAIN_NAME;
+	rainSchedule.interval   = &rainThreadCfg->interval;
+	rainSchedule.tp         = chThdGetSelfX();
 
 	(void) chMBPostTimeout(&registerScheduleMail, (msg_t) &rainSchedule, TIME_IMMEDIATE);
 	chThdSleepMilliseconds(1000); //wait for stabilise all values
@@ -49,18 +46,21 @@ static THD_FUNCTION(rainThread, arg) {
 	(void) chMBPostTimeout(&registerHwMail, (msg_t) &rainHW, TIME_IMMEDIATE);
 	///////////////////////////////////////////////////////////////
 
+	uint16_t referenceNoRain = 0;
 	uint32_t streamBuff[1];
 	while (true) {
-
 		adcAcquireBus(rainThreadCfg->adcDriver);
 		adcStart(rainThreadCfg->adcDriver, NULL);
 		msg = adcConvert(rainThreadCfg->adcDriver, rainThreadCfg->adcGroup, adcRainSamples, ADC_RAIN_GRP_CHARGEBUF_DEPTH);
 		adcStop(rainThreadCfg->adcDriver);
 		adcReleaseBus(rainThreadCfg->adcDriver);
-
 		if(msg == MSG_OK){
+			if(referenceNoRain == 0 && adcRainSamples[0] > 1000){
+				referenceNoRain = adcRainSamples[0];
+			}
+
 			chSysLock();
-			streamBuff[0] = rainHW.values[RAIN_STATUS].value = adcRainSamples[0] < 3400 ? 1 : 0;
+			streamBuff[0] = rainHW.values[RAIN_STATUS].value = adcRainSamples[0] < referenceNoRain ? 1 : 0;
 			rainHW.status = HW_STATUS_OK;
 			chSysUnlock();
 
@@ -74,17 +74,21 @@ static THD_FUNCTION(rainThread, arg) {
 			rainHW.status = HW_STATUS_ERROR;
 		}
 
-		chThdSleepMilliseconds(interval);
+		//load new configuration if needed
+		thread_t *tp = chMsgWaitTimeout(rainThreadCfg->interval * 1000);
+		if(tp){
+			rainThreadCfg->interval = (uint16_t)chMsgGet(tp);
+			chMsgRelease(tp, MSG_OK);
+		}
 	}
 }
 
 /**
  *
  */
-void Rain__thread_init(const rain__threadConfig_t *cfg) {
+void Rain__thread_init(rain__threadConfig_t *cfg) {
 	osalDbgCheck(cfg->adcGroup->num_channels == ADC_RAIN_GRP_CHARGE_NUM_CHANNELS);
 	rainThreadCfg = cfg;
-	interval = rainThreadCfg->interval;
 }
 
 /**
@@ -92,11 +96,4 @@ void Rain__thread_init(const rain__threadConfig_t *cfg) {
  */
 void Rain__thread_start(void) {
 	chThdCreateStatic(RAINVA, sizeof(RAINVA), THREAD_PRIORITY_RAIN, rainThread,NULL);
-}
-
-/**
- *
- */
-void Rain__thread_setInterval(uint16_t i) {
-	interval = i;
 }

@@ -5,13 +5,13 @@
 #define BM280_NAME "BMP280"
 
 typedef struct {
-	uint32_t hwId;
+	const uint32_t hwId;
 	I2CDriver *driver;
 	uint32_t enablePinLine;
-	uint16_t interval; //ms
+	uint16_t interval; //second
 } Bmp280__threadConfig_t;
 
-void Bmp280__thread_init(const Bmp280__threadConfig_t *cfg);
+void Bmp280__thread_init(Bmp280__threadConfig_t *cfg);
 void Bmp280__thread_start(void);
 
 #endif

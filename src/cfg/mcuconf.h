@@ -51,9 +51,9 @@
 #define STM32_LSE_ENABLED                   FALSE
 #define STM32_ADC_CLOCK_ENABLED             TRUE
 #define STM32_USB_CLOCK_ENABLED             FALSE
-#define STM32_MSIRANGE                      STM32_MSIRANGE_1M
+#define STM32_MSIRANGE                      STM32_MSIRANGE_2M
 #define STM32_SW                            STM32_SW_MSI
-#define STM32_PLLSRC                        STM32_PLLSRC_HSE
+#define STM32_PLLSRC                        STM32_PLLSRC_HSI
 #define STM32_PLLMUL_VALUE                  4
 #define STM32_PLLDIV_VALUE                  2
 #define STM32_HPRE                          STM32_HPRE_DIV1

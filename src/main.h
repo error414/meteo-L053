@@ -20,11 +20,11 @@
 #define THREAD_PRIORITY_REGISTER_SCH        NORMALPRIO + 20
 
 #define CONFIG_BASE_ADDR 0
-#define VERSION 1
+#define VERSION 2
 
 typedef struct {
-	uint8_t version;
-	uint8_t interval[SCHEDULE_LIST_SIZE];
+	uint8_t   version;
+	uint16_t   interval[SCHEDULE_LIST_SIZE]; //second
 } appConfiguration_t;
 
 extern appConfiguration_t appConfiguration;

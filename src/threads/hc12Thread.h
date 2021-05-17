@@ -51,6 +51,7 @@ typedef struct {
 typedef struct {
 	uint32_t hwId;
 	uint32_t lineSet; // pin for go to set mode
+	uint32_t enableLine;
 	BaseChannel *sc_channel;
 } hc12ThreadCfg_t;
 
@@ -65,7 +66,9 @@ typedef struct {
 
 void HC12__thread_init(const hc12ThreadCfg_t *_threadCfg, hc12cfg_t *_hc12Cfg);
 void HC12__thread_start(void);
-bool HC12__thread_reconfigure(hc12cfg_t *cfg, BaseSequentialStream *outStream);
-bool HC12__thread_reconfigureDefault(BaseSequentialStream *outStream);
+bool HC12__reconfigure(hc12cfg_t *cfg, BaseSequentialStream *outStream);
+bool HC12__reconfigureDefault(BaseSequentialStream *outStream);
+bool HC12__tunrOffRadio(void);
+void HC12__tunrOnRadio(void);
 
 #endif

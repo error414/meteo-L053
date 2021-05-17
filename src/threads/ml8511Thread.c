@@ -9,11 +9,10 @@
 
 #define ML8511_UV 0
 
-static const ML8511__threadConfig_t *ml8511ThreadCfg;
+static ML8511__threadConfig_t *ml8511ThreadCfg;
 static ml8511_cfg_t driverCfg;
 static hw_t ml8511HW;
 static schedule_t   ml8511Schedule;
-static uint16_t     interval;
 
 void Ml8511__thread_setInterval(uint16_t i);
 
@@ -32,10 +31,10 @@ static THD_FUNCTION(ML8511Thread, arg) {
 	///////////////////////////////////////////////////////////////
 	// REGISTER SCHEDULE
 	///////////////////////////////////////////////////////////////
-	ml8511Schedule.id = ml8511ThreadCfg->hwId;
-	ml8511Schedule.name = ML8511_NAME;
-	ml8511Schedule.interval = &interval;
-	ml8511Schedule.setInterval = &Ml8511__thread_setInterval;
+	ml8511Schedule.id       = ml8511ThreadCfg->hwId;
+	ml8511Schedule.name     = ML8511_NAME;
+	ml8511Schedule.interval = &ml8511ThreadCfg->interval;
+	ml8511Schedule.tp       = chThdGetSelfX();
 
 	(void) chMBPostTimeout(&registerScheduleMail, (msg_t) &ml8511Schedule, TIME_IMMEDIATE);
 	chThdSleepMilliseconds(1000); //wait for stabilise all values
@@ -56,7 +55,6 @@ static THD_FUNCTION(ML8511Thread, arg) {
 	///////////////////////////////////////////////////////////////
 
 	ML8511_init(&driverCfg);
-
 	while (true) {
 		uvLight = ML8511_getUV();
 		if(uvLight > 0.0f){
@@ -75,16 +73,23 @@ static THD_FUNCTION(ML8511Thread, arg) {
 			ml8511HW.status = HW_STATUS_ERROR;
 		}
 
-		chThdSleepMilliseconds(interval);
+		//load new configuration if needed
+		thread_t *tp = chMsgWaitTimeout(ml8511ThreadCfg->interval * 1000);
+		if(tp){
+			ml8511ThreadCfg->interval = (uint16_t)chMsgGet(tp);
+			chMsgRelease(tp, MSG_OK);
+		}
 	}
 }
 
 /**
  *
  */
-void Ml8511__thread_init(const ML8511__threadConfig_t *cfg) {
+void Ml8511__thread_init(ML8511__threadConfig_t *cfg) {
 	ml8511ThreadCfg = cfg;
-	interval = ml8511ThreadCfg->interval;
+	if (cfg->driverEnableLine != ML8511_NO_ENABLE_LINE){
+		palSetLineMode(cfg->driverEnableLine, PAL_STM32_MODE_OUTPUT);
+	}
 }
 
 /**
@@ -92,11 +97,4 @@ void Ml8511__thread_init(const ML8511__threadConfig_t *cfg) {
  */
 void Ml8511__thread_start(void) {
 	chThdCreateStatic(ML8511VA, sizeof(ML8511VA), THREAD_PRIORITY_ML8511, ML8511Thread,NULL);
-}
-
-/**
- *
- */
-void Ml8511__thread_setInterval(uint16_t i) {
-	interval = i;
 }

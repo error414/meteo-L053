@@ -19,9 +19,10 @@ enum hwStatus_e {
 };
 
 typedef enum {
-	VALUE_FORMATTER_NONE    = 0,
-	VALUE_FORMATTER_100     = 1,
-	VALUE_FORMATTER_BOOL    = 2,
+	VALUE_FORMATTER_NONE        = 0,
+	VALUE_FORMATTER_100         = 1,
+	VALUE_FORMATTER_100_P100    = 2,
+	VALUE_FORMATTER_BOOL        = 3,
 } valueFormatter_e;
 
 typedef struct {

@@ -52,9 +52,7 @@ static THD_FUNCTION(hc12StreamThread, arg) {
 		msg = chMBFetchTimeout(&streamMail, (msg_t *) &pbuf, 300);
 		if (msg == MSG_OK) {
 			HC12__thread_wakeUp();
-			if(chBSemWaitTimeout(&hc12State.uart_bsem, 1000) != MSG_OK){
-				continue;
-			}
+			chBSemWait(&hc12State.uart_bsem);
 			chnWriteTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&pbuf->message, pbuf->size, 5000);
 			pbuf->message[0] = 0x0a; //end of line
 			pbuf->message[1] = 0x0d; //end of line
@@ -75,7 +73,7 @@ void HC12__thread_init(const hc12ThreadCfg_t *_threadCfg, hc12cfg_t *_hc12Cfg) {
 	hc12State.status = HC12_STATUS_NOK;
 
 	palSetLineMode(_threadCfg->lineSet, PAL_STM32_MODE_OUTPUT);
-
+	palSetLineMode(LINE_GPIOC_10, PAL_STM32_MODE_OUTPUT);
 	hc12State.threadCfg = _threadCfg;
 	hc12State.hc12Cfg   = _hc12Cfg;
 
@@ -119,14 +117,14 @@ void HC12__thread_checkStatus(void) {
  * @param outStream
  * @return
  */
-bool HC12__thread_reconfigureDefault(BaseSequentialStream *outStream){
-	return HC12__thread_reconfigure(hc12State.hc12Cfg, outStream);
+bool HC12__reconfigureDefault(BaseSequentialStream *outStream){
+	return HC12__reconfigure(hc12State.hc12Cfg, outStream);
 }
 
 /**
  *
  */
-bool HC12__thread_reconfigure(hc12cfg_t *cfg, BaseSequentialStream *outStream) {
+bool HC12__reconfigure(hc12cfg_t *cfg, BaseSequentialStream *outStream) {
 	if(hc12State.status == HC12_STATUS_SLEEP){
 		HC12__thread_wakeUp();
 	}
@@ -268,16 +266,8 @@ bool HC12__thread_goToSleep(void ){
 		return false;
 	}
 
-	msg_t msg = chBSemWaitTimeout(&hc12State.uart_bsem, 500);
-	if(msg != MSG_OK){
-		return false;
-	}
-
-	HC12__thread_progMode();
-	chprintf((BaseSequentialStream*)hc12State.threadCfg->sc_channel, HC12_AT_SLEEP);
-	chThdSleepMilliseconds(20);
-	HC12__thread_normalMode();
-
+	palClearLine(hc12State.threadCfg->enableLine);
+	chThdSleepMilliseconds(10);
 	hc12State.status = HC12_STATUS_SLEEP;
 	return true;
 }
@@ -292,12 +282,9 @@ bool HC12__thread_wakeUp(){
 		return false;
 	}
 
-	HC12__thread_progMode();
-	HC12__thread_normalMode();
-
-	hc12State.status = HC12_STATUS_OK;
-	chBSemSignal(&hc12State.uart_bsem);
+	palSetLine(hc12State.threadCfg->enableLine);
 	chThdSleepMilliseconds(HC12_WAIT_AFTER_SLEEP_TIMEOUT);
+	hc12State.status = HC12_STATUS_OK;
 	return true;
 }
 
@@ -315,4 +302,24 @@ void HC12__thread_progMode(){
 void HC12__thread_normalMode(){
 	palSetLine(hc12State.threadCfg->lineSet);
 	chThdSleepMilliseconds(HC12_WAIT_EXIT_FROM_PROG_MODE_TIMEOUT);
+}
+
+/**
+ *
+ */
+bool HC12__tunrOffRadio(void){
+	if(chBSemWaitTimeout(&hc12State.uart_bsem, 1000) != MSG_OK){
+		return false;
+	}
+
+	HC12__thread_goToSleep();
+	return true;
+}
+
+/**
+ *
+ */
+void HC12__tunrOnRadio(void){
+	HC12__thread_wakeUp();
+	chBSemSignal(&hc12State.uart_bsem);
 }

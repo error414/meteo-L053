@@ -11,13 +11,10 @@
 #define BH1750_LIGHT 0
 
 static BH1750_HandleTypedef BH1750_dev;
-static const BH1750__threadConfig_t *bh1750ThreadCfg;
+static BH1750__threadConfig_t *bh1750ThreadCfg;
 
 static hw_t bh1750HW;
 static schedule_t   bh1750Schedule;
-static uint16_t     interval;
-
-void Bh1750__thread_setInterval(uint16_t i);
 
 static THD_WORKING_AREA(BH1750VA, 140);
 static THD_FUNCTION(BH1750Thread, arg) {
@@ -29,10 +26,10 @@ static THD_FUNCTION(BH1750Thread, arg) {
 	///////////////////////////////////////////////////////////////
 	// REGISTER SCHEDULE
 	///////////////////////////////////////////////////////////////
-	bh1750Schedule.id = bh1750ThreadCfg->hwId;
-	bh1750Schedule.name = BH11750_NAME;
-	bh1750Schedule.interval = &interval;
-	bh1750Schedule.setInterval = &Bh1750__thread_setInterval;
+	bh1750Schedule.id       = bh1750ThreadCfg->hwId;
+	bh1750Schedule.name     = BH11750_NAME;
+	bh1750Schedule.interval = &bh1750ThreadCfg->interval;
+	bh1750Schedule.tp       = chThdGetSelfX();
 
 	(void) chMBPostTimeout(&registerScheduleMail, (msg_t) &bh1750Schedule, TIME_IMMEDIATE);
 	chThdSleepMilliseconds(1000); //wait for stabilise all values
@@ -42,10 +39,10 @@ static THD_FUNCTION(BH1750Thread, arg) {
 	///////////////////////////////////////////////////////////////
 	// REGISTER HW
 	///////////////////////////////////////////////////////////////
-	bh1750HW.id = bh1750ThreadCfg->hwId;
-	bh1750HW.type = VALUE_TYPE_SENSOR;
-	bh1750HW.name = BH11750_NAME;
-	bh1750HW.status = BH1750_init(&BH1750_dev) == MSG_OK; //test HW
+	bh1750HW.id         = bh1750ThreadCfg->hwId;
+	bh1750HW.type       = VALUE_TYPE_SENSOR;
+	bh1750HW.name       = BH11750_NAME;
+	bh1750HW.status     = BH1750_init(&BH1750_dev) == MSG_OK; //test HW
 
 	bh1750HW.values[BH1750_LIGHT].formatter = VALUE_FORMATTER_NONE;
 	bh1750HW.values[BH1750_LIGHT].name = "Lux";
@@ -77,17 +74,21 @@ static THD_FUNCTION(BH1750Thread, arg) {
 			bh1750HW.status = HW_STATUS_ERROR;
 		}
 
-		chThdSleepMilliseconds(interval);
+		//load new configuration if needed
+		thread_t *tp = chMsgWaitTimeout(bh1750ThreadCfg->interval * 1000);
+		if(tp){
+			bh1750ThreadCfg->interval = (uint16_t)chMsgGet(tp);
+			chMsgRelease(tp, MSG_OK);
+		}
 	}
 }
 
 /**
  *
  */
-void Bh1750__thread_init(const BH1750__threadConfig_t *cfg) {
+void Bh1750__thread_init(BH1750__threadConfig_t *cfg) {
 	BH1750_init_default_params(&BH1750_dev, cfg->driver, true);
 	bh1750ThreadCfg = cfg;
-	interval = cfg->interval;
 }
 
 /**
@@ -95,11 +96,4 @@ void Bh1750__thread_init(const BH1750__threadConfig_t *cfg) {
  */
 void Bh1750__thread_start(void) {
 	chThdCreateStatic(BH1750VA, sizeof(BH1750VA), THREAD_PRIORITY_BH1750, BH1750Thread,NULL);
-}
-
-/**
- *
- */
-void Bh1750__thread_setInterval(uint16_t i) {
-	interval = i;
 }

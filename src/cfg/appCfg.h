@@ -5,7 +5,7 @@
 
 #define HC12_HW_ID_OFFSET 0
 
-#define DEFAULT_TASK_INTERVAL 10
+#define DEFAULT_TASK_INTERVAL 30 //second
 
 ////////////////////////////////////////
 ///// SENSORS /////////////////////////
@@ -40,7 +40,7 @@
 
 #ifdef USE_ML8511
 #define ML8511_HW_ID 3
-#define  ML8511_ENABLE_PIN       -1
+#define  ML8511_ENABLE_PIN   LINE_GPIOB_0
 #define ML8511_DEFAULT_INTERVAL 10
 #endif
 ////////////////////////////////////////
@@ -48,7 +48,7 @@
 ////////////////////////////////////////
 ///// RAIN SENSOR BOOL     /////////////
 ///// ADC1 CHSEL7          /////////////
-#define USE_RAIN_FC37
+//#define USE_RAIN_FC37
 
 #ifdef USE_RAIN_FC37
 #define RAIN_FC37_HW_ID 6
@@ -58,7 +58,7 @@
 
 ////////////////////////////////////////
 ///// WIND SPEED           /////////////
-#define USE_WIND_SPEED
+//#define USE_WIND_SPEED
 
 #ifdef USE_WIND_SPEED
 #define WIND_SPEED_FC37_HW_ID 5
@@ -70,6 +70,8 @@
 ////////////////////////////////////////
 ///// POWER               /////////////
 #define POWER_HW_ID 4
+#define POWER_SOLAR_VOLTAGE_SCALE 4
+#define POWER_BATT_VOLTAGE_SCALE 4
 ////////////////////////////////////////
 
 ////////////////////////////////////////

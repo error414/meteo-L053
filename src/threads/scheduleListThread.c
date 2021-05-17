@@ -6,7 +6,7 @@
 static schedule_t *scheduleList[SCHEDULE_LIST_SIZE];
 
 ////////////////////////////////////////////////////////////////////////////
-msg_t registerScheduleDataLetter[SCHEDULE_LIST_SIZE];
+static msg_t registerScheduleDataLetter[SCHEDULE_LIST_SIZE];
 MAILBOX_DECL(registerScheduleMail, &registerScheduleDataLetter, SCHEDULE_LIST_SIZE);
 /////////////////////////////////////////////////////////////////////////
 
