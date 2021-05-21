@@ -49,14 +49,14 @@ static THD_FUNCTION(hc12StreamThread, arg) {
 	msg_t msg;
 
 	while (true) {
-		msg = chMBFetchTimeout(&streamMail, (msg_t *) &pbuf, 300);
+		msg = chMBFetchTimeout(&streamMail, (msg_t *) &pbuf, OSAL_MS2I(300));
 		if (msg == MSG_OK) {
 			HC12__thread_wakeUp();
 			chBSemWait(&hc12State.uart_bsem);
-			chnWriteTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&pbuf->message, pbuf->size, 5000);
+			chnWriteTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&pbuf->message, pbuf->size, OSAL_MS2I(5000));
 			pbuf->message[0] = 0x0a; //end of line
 			pbuf->message[1] = 0x0d; //end of line
-			chnWriteTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&pbuf->message, 2, 5000);
+			chnWriteTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&pbuf->message, 2, OSAL_MS2I(5000));
 			chThdSleepMilliseconds(50);
 			chPoolFree(&streamMemPool, pbuf);
 			chBSemSignal(&hc12State.uart_bsem);
@@ -101,7 +101,7 @@ void HC12__thread_checkStatus(void) {
 	HC12__thread_progMode();
 	chprintf((BaseSequentialStream*)hc12State.threadCfg->sc_channel, HC12_AT_PING);
 
-	chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff, 8, HC12_WAIT_TO_ANSWER_TIMEOUT);
+	chnReadTimeout(hc12State.threadCfg->sc_channel, (uint8_t *)&hc12State.rxBuff, 8, OSAL_MS2I(HC12_WAIT_TO_ANSWER_TIMEOUT));
 	if((hc12State.rxBuff[0] == 0x4F || hc12State.rxBuff[1] == 0x4F) && (hc12State.rxBuff[1] == 0x4b || hc12State.rxBuff[2] == 0x4b)){
 		chSysLock();
 		hc12State.status = HC12_STATUS_OK;
@@ -308,7 +308,7 @@ void HC12__thread_normalMode(){
  *
  */
 bool HC12__tunrOffRadio(void){
-	if(chBSemWaitTimeout(&hc12State.uart_bsem, 1000) != MSG_OK){
+	if(chBSemWaitTimeout(&hc12State.uart_bsem, OSAL_MS2I(1000)) != MSG_OK){
 		return false;
 	}
 

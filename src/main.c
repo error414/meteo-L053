@@ -1,7 +1,6 @@
 #include <stdio.h>
 #include "ch.h"
 #include "hal.h"
-#include "appCfg.h"
 #include "main.h"
 #include "hw.h"
 #include "pools.h"
@@ -12,7 +11,6 @@
 #include "hwListThread.h"
 #include "hc12Thread.h"
 #include "powerThread.h"
-
 
 #ifdef USE_BMP280
 #include "bmp280Thread.h"
@@ -32,6 +30,10 @@
 
 #ifdef USE_WIND_SPEED
 #include "windThread.h"
+#endif
+
+#ifdef USE_AS3935
+#include "as3935Thread.h"
 #endif
 
 #ifdef USE_SHELL
@@ -117,9 +119,24 @@ int main(void) {
 	};
 #endif
 
+#ifdef USE_AS3935
+	As3935__threadConfig_t as3935Cfg = {
+			.hwId = USE_AS3935_HW_ID,
+			.driver = &I2CD1,
+			.interruptLine = AS3935_INTERRUPT_LINE,
+			.i2cAddr = AS3935_I2C_ADDR
+			.interval = appConfiguration.interval[USE_AS3935_HW_ID] > 0 ? appConfiguration.interval[USE_AS3935_HW_ID] : BH1750_DEFAULT_INTERVAL,
+	};
+#endif
+
 #ifdef USE_SHELL
 	const ShellConfig shellCfgUart = {
+#ifdef SHELL_USE_UART_1
 			(BaseSequentialStream *)&SD1,
+#endif
+#ifdef SHELL_USE_UART_2
+			(BaseSequentialStream *)&SD2,
+#endif
 			shellCommands
 	};
 #endif
@@ -135,6 +152,7 @@ int main(void) {
 			.hwId               = POWER_HW_ID,
 			.adcGroup           = &adcgrpcfgPower,
 			.adcDriver          = &ADCD1,
+			.i2cDriver          = &I2CD1,
 			.chrgInfoLine       = LINE_GPIOB_10,
 			.stdbyInfoLine      = LINE_GPIOB_11,
 			.interval           = appConfiguration.interval[POWER_HW_ID] > 0 ? appConfiguration.interval[POWER_HW_ID] : DEFAULT_TASK_INTERVAL,
@@ -153,12 +171,16 @@ int main(void) {
 	//INIT HW
 	///////////////////////////////////////////////////////////////
 	lpuart_init();
+#ifdef SHELL_USE_UART_1
 	uart1_init();
+#endif
+#ifdef SHELL_USE_UART_2
+	uart2_init();
+#endif
+
 	adc_power_init();
 	power_GPIO_init();
-#ifdef USE_I2C1
 	i2c1_init();
-#endif
 #ifdef USE_ML8511
 	adc_device2_init();
 #endif
@@ -193,6 +215,9 @@ int main(void) {
 #ifdef USE_WIND_SPEED
 	Wind__thread_init(&windCfg);
 #endif
+#ifdef USE_AS3935
+	As3935__thread_init(&as3935Cfg);
+#endif
 	///////////////////////////////////////////////////////////////
 
 
@@ -218,6 +243,9 @@ int main(void) {
 #ifdef USE_WIND_SPEED
 	Wind__thread_start();
 #endif
+#ifdef USE_AS3935
+	As3935__thread_start();
+#endif
 #ifdef USE_SHELL
 	Shell__thread_init(&shellCfgUart);
 	///////////////////////////////////////////////////////////////
@@ -237,7 +265,6 @@ int main(void) {
 /**
  *
  */
-#ifdef USE_I2C1
 void checkI2CCondition(I2CDriver *driver){
 	if(driver->state == I2C_LOCKED){
 		i2cAcquireBus(driver);
@@ -250,4 +277,3 @@ void checkI2CCondition(I2CDriver *driver){
 		i2cReleaseBus(driver);
 	}
 }
-#endif

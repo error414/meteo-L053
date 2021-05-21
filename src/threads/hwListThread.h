@@ -2,7 +2,7 @@
 #define HW_LIST_THREAD_H
 
 #define  HW_LIST_SIZE           10
-#define  HW_LIST_VALUES_SIZE    6
+#define  HW_LIST_VALUES_SIZE    10
 
 #define HW_STATUS_LIST "UNKNOWN", "OK", "ERROR"
 #define HW_TYPE_LIST "SENSOR", "TRANSMITTER"

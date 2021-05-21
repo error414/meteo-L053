@@ -51,7 +51,7 @@
 #define STM32_LSE_ENABLED                   FALSE
 #define STM32_ADC_CLOCK_ENABLED             TRUE
 #define STM32_USB_CLOCK_ENABLED             FALSE
-#define STM32_MSIRANGE                      STM32_MSIRANGE_2M
+#define STM32_MSIRANGE                      STM32_MSIRANGE_4M
 #define STM32_SW                            STM32_SW_MSI
 #define STM32_PLLSRC                        STM32_PLLSRC_HSI
 #define STM32_PLLMUL_VALUE                  4
@@ -125,7 +125,7 @@
  */
 #define STM32_I2C_USE_I2C1                  TRUE
 #define STM32_I2C_USE_I2C2                  FALSE
-#define STM32_I2C_BUSY_TIMEOUT              50
+#define STM32_I2C_BUSY_TIMEOUT              100
 #define STM32_I2C_I2C1_IRQ_PRIORITY         3
 #define STM32_I2C_I2C2_IRQ_PRIORITY         3
 #define STM32_I2C_USE_DMA                   TRUE
@@ -155,7 +155,7 @@
  * SERIAL driver system settings.
  */
 #define STM32_SERIAL_USE_USART1             TRUE
-#define STM32_SERIAL_USE_USART2             FALSE
+#define STM32_SERIAL_USE_USART2             TRUE
 #define STM32_SERIAL_USE_LPUART1            TRUE
 
 /*

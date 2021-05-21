@@ -12,6 +12,7 @@ typedef struct {
 	const uint32_t hwId;
 	const ADCConversionGroup *adcGroup;
 	ADCDriver *adcDriver;
+	I2CDriver *i2cDriver;
 	uint16_t interval; //second
 	uint32_t chrgInfoLine;
 	uint32_t stdbyInfoLine;

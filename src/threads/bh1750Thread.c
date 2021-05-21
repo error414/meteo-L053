@@ -42,10 +42,12 @@ static THD_FUNCTION(BH1750Thread, arg) {
 	bh1750HW.id         = bh1750ThreadCfg->hwId;
 	bh1750HW.type       = VALUE_TYPE_SENSOR;
 	bh1750HW.name       = BH11750_NAME;
-	bh1750HW.status     = BH1750_init(&BH1750_dev) == MSG_OK; //test HW
+	bh1750HW.status     = HW_STATUS_UNKNOWN;
 
 	bh1750HW.values[BH1750_LIGHT].formatter = VALUE_FORMATTER_NONE;
 	bh1750HW.values[BH1750_LIGHT].name = "Lux";
+
+	BH1750_init(&BH1750_dev);
 
 	(void) chMBPostTimeout(&registerHwMail, (msg_t) &bh1750HW, TIME_IMMEDIATE); // after this must be access bmp280HW atomically
 	chThdSleepMilliseconds(1000); //wait for stabilise all values

@@ -83,7 +83,7 @@ static bool BMP280_read_register16(BMP280_HandleTypedef *dev, uint8_t addr, uint
 	}
 
 	tx_buff = addr;
-	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, &tx_buff, 1, (uint8_t*)&rx_buff, 2, 800) == MSG_OK) {
+	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, &tx_buff, 1, (uint8_t*)&rx_buff, 2, OSAL_MS2I(800)) == MSG_OK) {
 		*value = (uint16_t) ((rx_buff[1] << 8) | rx_buff[0]);
 		i2cReleaseBus(dev->i2c);
 		return true;

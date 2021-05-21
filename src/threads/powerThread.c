@@ -6,18 +6,24 @@
 #include "pools.h"
 #include "msp.h"
 #include "hc12Thread.h"
+#include "ADS1X15.h"
 
 #define POWER_VOLTAGE_SOLAR 0
 #define POWER_VOLTAGE_BATT  1
 #define POWER_CHRG_STATUS   2
 #define POWER_STDBY_STATUS  3
 
+static ADS1X15_device_t adcDev = {
+		.i2cAddress = 0x48,
+};
+
+
 static power__threadConfig_t *powerThreadCfg;
 static adcsample_t adcPowerSamples[ADC_POWER_GRP_CHARGE_NUM_CHANNELS * ADC_POWER_GRP_CHARGEBUF_DEPTH];
 static hw_t powerHW;
 static schedule_t   powerSchedule;
 
-static THD_WORKING_AREA(POWERVA, 70);
+static THD_WORKING_AREA(POWERVA, 250);
 static THD_FUNCTION(powerThread, arg) {
 	(void) arg;
 	chRegSetThreadName("Power");
@@ -26,7 +32,7 @@ static THD_FUNCTION(powerThread, arg) {
 	///////////////////////////////////////////////////////////////
 	// REGISTER SCHEDULE
 	///////////////////////////////////////////////////////////////
-	powerSchedule.id = powerThreadCfg->hwId;
+ 	powerSchedule.id = powerThreadCfg->hwId;
 	powerSchedule.name = POWER_NAME;
 	powerSchedule.interval = &powerThreadCfg->interval;
 	powerSchedule.tp = chThdGetSelfX();
@@ -41,7 +47,7 @@ static THD_FUNCTION(powerThread, arg) {
 	powerHW.id = powerThreadCfg->hwId;
 	powerHW.type = VALUE_TYPE_SENSOR;
 	powerHW.name = POWER_NAME;
-	powerHW.status = HW_STATUS_UNKNOWN;
+	powerHW.status = ADS__init(&adcDev) ? HW_STATUS_OK : HW_STATUS_ERROR;
 
 	powerHW.values[POWER_VOLTAGE_SOLAR].formatter = VALUE_FORMATTER_100;
 	powerHW.values[POWER_VOLTAGE_SOLAR].name = "Voltage SOLAR";
@@ -57,8 +63,16 @@ static THD_FUNCTION(powerThread, arg) {
 	(void) chMBPostTimeout(&registerHwMail, (msg_t) &powerHW, TIME_IMMEDIATE);
 	///////////////////////////////////////////////////////////////
 
+
+	static uint16_t battAdcValue;
 	uint32_t streamBuff[4];
 	while (true) {
+		checkI2CCondition(powerThreadCfg->i2cDriver);
+
+		if(powerHW.status == HW_STATUS_ERROR){
+			ADS__init(&adcDev); // try reconfigure
+		}
+
 		if(!HC12__tunrOffRadio()){
 			continue;
 		}
@@ -69,13 +83,12 @@ static THD_FUNCTION(powerThread, arg) {
 		adcReleaseBus(powerThreadCfg->adcDriver);
 
 		HC12__tunrOnRadio();
-
-		if(msg == MSG_OK){
+		if(msg == MSG_OK && ADS__readADC_Differential_0_1(&adcDev, &battAdcValue)){
 			chSysLock();
 			bool chrg = !palReadLine(powerThreadCfg->chrgInfoLine);
 
 			streamBuff[0] = powerHW.values[POWER_VOLTAGE_SOLAR].value   = (uint32_t)((float)(10.9f / (4096.0f / (double)adcPowerSamples[0])) * 100);
-			streamBuff[1] = powerHW.values[POWER_VOLTAGE_BATT].value    = (uint32_t)((float)(6.6f / (4096.0f / (double)adcPowerSamples[1])) * 100);
+			streamBuff[1] = powerHW.values[POWER_VOLTAGE_BATT].value    = (uint32_t)(ADS__toVoltage(&adcDev, battAdcValue) * 100);
 			streamBuff[2] = powerHW.values[POWER_CHRG_STATUS].value     = chrg;
 			streamBuff[3] = powerHW.values[POWER_STDBY_STATUS].value    = !palReadLine(powerThreadCfg->stdbyInfoLine);
 			powerHW.status = HW_STATUS_OK;
@@ -105,6 +118,7 @@ static THD_FUNCTION(powerThread, arg) {
 void Power__thread_init(power__threadConfig_t *cfg) {
 	osalDbgCheck(cfg->adcGroup->num_channels == ADC_POWER_GRP_CHARGE_NUM_CHANNELS);
 	powerThreadCfg = cfg;
+	adcDev.i2cDriver = powerThreadCfg->i2cDriver;
 }
 
 /**

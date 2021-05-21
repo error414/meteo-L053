@@ -50,7 +50,7 @@ msg_t BH1750_send_command(BH1750_HandleTypedef* dev, uint8_t cmd){
 			1,					//8bit addr
 			&dev->bufferRx[0],
 			0,
-			5000					//Wait time
+			OSAL_MS2I(500)					//Wait time
 	);
 
 	i2cReleaseBus(dev->i2c_handle);
@@ -75,7 +75,7 @@ msg_t BH1750_read_dev(BH1750_HandleTypedef* dev) {
 	                                    dev->address,
 	                                    (uint8_t*)&dev->bufferRx,
 	                                    2,
-	                                    800
+	                                    OSAL_MS2I(800)
 	);
 
 	i2cReleaseBus(dev->i2c_handle);

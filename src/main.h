@@ -3,6 +3,7 @@
 
 #include "hal.h"
 #include "scheduleListThread.h"
+#include "appCfg.h"
 
 #define NEWLINE_STR                     "\r\n"
 #define NEWLINE_STR_SIMPLE              "\n"
@@ -24,7 +25,7 @@
 
 typedef struct {
 	uint8_t   version;
-	uint16_t   interval[SCHEDULE_LIST_SIZE]; //second
+	uint16_t  interval[SCHEDULE_LIST_SIZE]; //second
 } appConfiguration_t;
 
 extern appConfiguration_t appConfiguration;

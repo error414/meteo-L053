@@ -1,5 +1,7 @@
 #ifndef HW_H
 #define HW_H
+#include "appCfg.h"
+
 
 extern const ADCConversionGroup adcgrpcfgPower;
 extern const ADCConversionGroup adcgrpcfgDevice1;
@@ -8,7 +10,13 @@ extern const ADCConversionGroup adcgrpcfgDeviceWind;
 extern const ADCConversionGroup adcgrpcfgRain;
 
 void lpuart_init(void);
+#ifdef SHELL_USE_UART_1
 void uart1_init(void);
+#endif
+#ifdef SHELL_USE_UART_2
+void uart2_init(void);
+#endif
+
 void i2c1_init(void);
 void power_GPIO_init(void);
 void adc_power_init(void);

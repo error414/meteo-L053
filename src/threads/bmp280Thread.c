@@ -44,7 +44,7 @@ static THD_FUNCTION(Bmp280Thread, arg) {
 	bmp280HW.id = bmp280ThreadCfg->hwId;
 	bmp280HW.type = VALUE_TYPE_SENSOR;
 	bmp280HW.name = BM280_NAME;
-	bmp280HW.status = (bool)BMP280_init(&BMP280_dev, &BMP280_dev.params); //test HW
+	bmp280HW.status = BMP280_init(&BMP280_dev, &BMP280_dev.params) ? HW_STATUS_OK : HW_STATUS_ERROR;
 
 	bmp280HW.values[BMP280_TEMP].formatter = VALUE_FORMATTER_100_P100;
 	bmp280HW.values[BMP280_TEMP].name = "Tempeature";
