@@ -28,6 +28,7 @@ typedef struct {
 	uint8_t bufferTx[3];
 	I2CDriver *i2cDriver;
 	uint8_t i2cAddress;
+	bool (*checkI2cFunc)(I2CDriver *driver);
 } ADS1X15_device_t;
 
 

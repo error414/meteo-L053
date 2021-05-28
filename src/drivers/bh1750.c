@@ -37,7 +37,7 @@ msg_t BH1750_read_dev(BH1750_HandleTypedef* dev);
 msg_t BH1750_send_command(BH1750_HandleTypedef* dev, uint8_t cmd){
 	i2cAcquireBus(dev->i2c_handle);
 
-	if(dev->i2c_handle->state != I2C_READY){
+	if(!dev->checkI2cFunc(dev->i2c_handle)){
 		i2cReleaseBus(dev->i2c_handle);
 		return MSG_TIMEOUT;
 	}
@@ -66,7 +66,7 @@ msg_t BH1750_send_command(BH1750_HandleTypedef* dev, uint8_t cmd){
 msg_t BH1750_read_dev(BH1750_HandleTypedef* dev) {
 	i2cAcquireBus(dev->i2c_handle);
 
-	if(dev->i2c_handle->state != I2C_READY){
+	if(!dev->checkI2cFunc(dev->i2c_handle)){
 		i2cReleaseBus(dev->i2c_handle);
 		return MSG_TIMEOUT;
 	}

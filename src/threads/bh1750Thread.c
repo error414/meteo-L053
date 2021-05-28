@@ -16,7 +16,7 @@ static BH1750__threadConfig_t *bh1750ThreadCfg;
 static hw_t bh1750HW;
 static schedule_t   bh1750Schedule;
 
-static THD_WORKING_AREA(BH1750VA, 140);
+static THD_WORKING_AREA(BH1750VA, 160);
 static THD_FUNCTION(BH1750Thread, arg) {
 	(void) arg;
 	chRegSetThreadName("Bh1750");
@@ -54,8 +54,6 @@ static THD_FUNCTION(BH1750Thread, arg) {
 	///////////////////////////////////////////////////////////////
 
 	while (true) {
-		checkI2CCondition(bh1750ThreadCfg->driver);
-
 		if(bh1750HW.status == HW_STATUS_ERROR){
 			BH1750_init(&BH1750_dev); // try reconfigure
 		}
@@ -90,6 +88,7 @@ static THD_FUNCTION(BH1750Thread, arg) {
  */
 void Bh1750__thread_init(BH1750__threadConfig_t *cfg) {
 	BH1750_init_default_params(&BH1750_dev, cfg->driver, true);
+	BH1750_dev.checkI2cFunc = cfg->checkI2cFunc;
 	bh1750ThreadCfg = cfg;
 }
 

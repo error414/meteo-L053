@@ -77,7 +77,7 @@ void BMP280_init_default_params(bmp280_params_t *params) {
  */
 static bool BMP280_read_register16(BMP280_HandleTypedef *dev, uint8_t addr, uint16_t *value) {
 	i2cAcquireBus(dev->i2c);
-	if(dev->i2c->state != I2C_READY){
+	if(!dev->checkI2cFunc(dev->i2c)){
 		i2cReleaseBus(dev->i2c);
 		return false;
 	}
@@ -104,7 +104,7 @@ static bool BMP280_read_register16(BMP280_HandleTypedef *dev, uint8_t addr, uint
 static bool BMP280_read_data(BMP280_HandleTypedef *dev, uint8_t addr, uint8_t *value, uint8_t len) {
 	i2cAcquireBus(dev->i2c);
 
-	if(dev->i2c->state != I2C_READY){
+	if(!dev->checkI2cFunc(dev->i2c)){
 		i2cReleaseBus(dev->i2c);
 		return false;
 	}
@@ -128,10 +128,10 @@ static bool BMP280_read_data(BMP280_HandleTypedef *dev, uint8_t addr, uint8_t *v
  */
 static int BMP280_write_register8(BMP280_HandleTypedef *dev, uint8_t addr, uint8_t value) {
 	i2cAcquireBus(dev->i2c);
-	if(dev->i2c->state != I2C_READY){
+	/*if(!dev->checkI2cFunc(dev->i2c)){
 		i2cReleaseBus(dev->i2c);
 		return false;
-	}
+	}*/
 
 	tx_buff2[0] = addr;
 	tx_buff2[1] = value;

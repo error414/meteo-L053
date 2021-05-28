@@ -15,7 +15,7 @@ bool HC12__thread_wakeUp();
 void HC12__thread_progMode();
 void HC12__thread_normalMode();
 
-static THD_WORKING_AREA(hc12StreamVA, 128);
+static THD_WORKING_AREA(hc12StreamVA, 110);
 static THD_FUNCTION(hc12StreamThread, arg) {
 	(void) arg;
 	chRegSetThreadName("hc12Stream");

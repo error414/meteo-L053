@@ -105,11 +105,9 @@ typedef struct {
 	int8_t   dig_H6;
 
 	uint16_t addr;
-
 	I2CDriver* i2c;
-
+	bool (*checkI2cFunc)(I2CDriver *driver);
 	bmp280_params_t params;
-
 	uint8_t  id;        /* Chip ID */
 
 } BMP280_HandleTypedef;

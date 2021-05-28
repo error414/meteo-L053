@@ -29,6 +29,5 @@ typedef struct {
 } appConfiguration_t;
 
 extern appConfiguration_t appConfiguration;
-void checkI2CCondition(I2CDriver *driver);
 
 #endif

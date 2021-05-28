@@ -82,7 +82,7 @@ bool AS3935_PowerUp(AS3935_I2C_dev_t *dev){
 	}
 	chThdSleepMilliseconds(2);
 
-	if(AS3935_I2C__sing_reg_write(dev, 0x08, 0x20, 0x00)){
+	if(!AS3935_I2C__sing_reg_write(dev, 0x08, 0x20, 0x00)){
 		return false;
 	}
 
@@ -202,14 +202,8 @@ bool AS3935_DisturberDis(AS3935_I2C_dev_t *dev) {
  * @param cap_val
  * @return
  */
-bool AS3935_SetTuningCaps(AS3935_I2C_dev_t *dev, uint8_t cap_val) {
-	// Assume only numbers divisible by 8 (because that's all the chip supports)
-	// cap_value out of range, assume highest capacitance
-	if(120 < cap_val){
-		return AS3935_I2C__sing_reg_write(dev, 0x08, 0x0F, 0x0F);			// set capacitance bits to maximum
-	}else{
-		return AS3935_I2C__sing_reg_write(dev, 0x08, 0x0F, (cap_val>>3));	// set capacitance bits
-	}
+bool AS3935_SetTuningCaps(AS3935_I2C_dev_t *dev, uint8_t tuneCapacitor) {
+	return AS3935_I2C__sing_reg_write(dev, 0x08, 0x0F, tuneCapacitor);	// set capacitance bits to maximum
 }
 
 /**
@@ -439,6 +433,28 @@ bool AS3935_SetLCO_FDIV(AS3935_I2C_dev_t *dev, uint8_t fdiv){
 	return AS3935_I2C__sing_reg_write(dev, 0x03, 0xC0, ((fdiv & 0x03) << 5));
 }
 
+/**
+ *
+ * @param dev
+ * @param tuneCapacitor
+ * @return bool
+ */
+bool AS3935_TuneAntenna(AS3935_I2C_dev_t *dev, uint8_t tuneCapacitor){
+	if(!AS3935_I2C__sing_reg_write(dev, 0x03, 0xC0, 0x00)){ // AS3935_LCO_FDIV
+		return false;
+	}
+
+	if(!AS3935_I2C__sing_reg_write(dev, 0x08, 0x80, 0x80)){ // AS3935_DISP_LCO
+		return false;
+	}
+
+	if(!AS3935_SetTuningCaps(dev, tuneCapacitor)){
+		return false;
+	}
+
+	return true;
+}
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////
@@ -452,7 +468,7 @@ bool AS3935_SetLCO_FDIV(AS3935_I2C_dev_t *dev, uint8_t fdiv){
 static uint8_t AS3935_I2C__sing_reg_read(AS3935_I2C_dev_t *dev, uint8_t regAdd){
 	i2cAcquireBus(dev->i2c);
 
-	if(dev->i2c->state != I2C_READY){
+	if(!dev->checkI2cFunc(dev->i2c)){
 		i2cReleaseBus(dev->i2c);
 		return false;
 	}
@@ -462,7 +478,7 @@ static uint8_t AS3935_I2C__sing_reg_read(AS3935_I2C_dev_t *dev, uint8_t regAdd){
 
 	dataTx = regAdd;
 
-	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, &dataTx, 1, (uint8_t*)&dataRx, 1, 800) == MSG_OK) {
+	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, &dataTx, 1, (uint8_t*)&dataRx, 1, OSAL_MS2I(800)) == MSG_OK) {
 		i2cReleaseBus(dev->i2c);
 		return dataRx;
 	} else{
@@ -488,18 +504,19 @@ static bool AS3935_I2C__sing_reg_write(AS3935_I2C_dev_t *dev, uint8_t regAdd, ui
 	uint8_t newRegData = ((origRegData & ~dataMask) | (regData & dataMask));
 
 	i2cAcquireBus(dev->i2c);
-	if(dev->i2c->state != I2C_READY){
+	if(!dev->checkI2cFunc(dev->i2c)){
 		i2cReleaseBus(dev->i2c);
 		return false;
 	}
 
-	static uint8_t dataTx; //static for DMA
+	static uint8_t dataTx[2]; //static for DMA
 	static uint8_t dataRx;
 
-	dataTx = newRegData;
+	dataTx[0] = regAdd;
+	dataTx[1] = newRegData;
 
 	// finally, write the data to the register
-	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, &dataTx, 1, (uint8_t*)&dataRx, 0, 800) == MSG_OK) {
+	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, (uint8_t*)&dataTx, 2, (uint8_t*)&dataRx, 0, OSAL_MS2I(800)) == MSG_OK) {
 		i2cReleaseBus(dev->i2c);
 		return true;
 	} else{
@@ -516,7 +533,8 @@ static bool AS3935_I2C__sing_reg_write(AS3935_I2C_dev_t *dev, uint8_t regAdd, ui
  */
 static bool AS3935_I2C__write16(AS3935_I2C_dev_t *dev, uint16_t data){
 	i2cAcquireBus(dev->i2c);
-	if(dev->i2c->state != I2C_READY){
+
+	if(!dev->checkI2cFunc(dev->i2c)){
 		i2cReleaseBus(dev->i2c);
 		return false;
 	}
@@ -527,7 +545,7 @@ static bool AS3935_I2C__write16(AS3935_I2C_dev_t *dev, uint16_t data){
 	dataTx = data;
 
 	// finally, write the data to the register
-	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, (uint8_t*)&dataTx, 1, (uint8_t*)&dataRx, 0, 800) == MSG_OK) {
+	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, (uint8_t*)&dataTx, 1, (uint8_t*)&dataRx, 0, OSAL_MS2I(800)) == MSG_OK) {
 		i2cReleaseBus(dev->i2c);
 		return true;
 	} else{

@@ -10,6 +10,7 @@ typedef struct {
 	I2CDriver *driver;
 	uint32_t enablePinLine;
 	uint16_t interval; //second
+	bool (*checkI2cFunc)(I2CDriver *driver);
 } BH1750__threadConfig_t;
 
 void Bh1750__thread_init(BH1750__threadConfig_t *cfg);

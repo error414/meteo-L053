@@ -349,7 +349,7 @@ bool ADS__readADC_Differential_0_1(ADS1X15_device_t *dev, uint16_t *value){
 static bool ADS__writeRegister(ADS1X15_device_t *dev, uint8_t reg, uint16_t value){
 	i2cAcquireBus(dev->i2cDriver);
 
-	if(dev->i2cDriver->state != I2C_READY){
+	if(!dev->checkI2cFunc(dev->i2cDriver)){
 		i2cReleaseBus(dev->i2cDriver);
 		return false;
 	}
@@ -373,7 +373,7 @@ static bool ADS__writeRegister(ADS1X15_device_t *dev, uint8_t reg, uint16_t valu
 static bool ADS__readRegister(ADS1X15_device_t *dev, uint8_t reg, uint16_t *dataRx){
 	i2cAcquireBus(dev->i2cDriver);
 
-	if(dev->i2cDriver->state != I2C_READY){
+	if(!dev->checkI2cFunc(dev->i2cDriver)){
 		i2cReleaseBus(dev->i2cDriver);
 		return false;
 	}

@@ -9,6 +9,7 @@ typedef struct {
 	I2CDriver *driver;
 	uint16_t interval; //second
 	uint32_t interruptLine;
+	bool (*checkI2cFunc)(I2CDriver *driver);
 	uint8_t i2cAddr;
 } As3935__threadConfig_t;
 

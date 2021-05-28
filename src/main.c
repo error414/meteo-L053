@@ -42,6 +42,7 @@
 #endif
 
 appConfiguration_t appConfiguration;
+static bool checkI2CCondition(I2CDriver *driver);
 
 /*
  * Application entry point.
@@ -79,6 +80,7 @@ int main(void) {
 			.hwId = BMP280_HW_ID,
 			.driver = &I2CD1,
 			.enablePinLine = BMP280_ENABLE_PIN,
+			.checkI2cFunc = &checkI2CCondition,
 			.interval = appConfiguration.interval[BMP280_HW_ID] > 0 ? appConfiguration.interval[BMP280_HW_ID] : BMP280_DEFAULT_INTERVAL,
 	};
 #endif
@@ -88,6 +90,7 @@ int main(void) {
 			.hwId = BH1750_HW_ID,
 			.driver = &I2CD1,
 			.enablePinLine = BH1750_ENABLE_PIN,
+			.checkI2cFunc = &checkI2CCondition,
 			.interval = appConfiguration.interval[BH1750_HW_ID] > 0 ? appConfiguration.interval[BH1750_HW_ID] : BH1750_DEFAULT_INTERVAL,
 	};
 #endif
@@ -124,8 +127,9 @@ int main(void) {
 			.hwId = USE_AS3935_HW_ID,
 			.driver = &I2CD1,
 			.interruptLine = AS3935_INTERRUPT_LINE,
-			.i2cAddr = AS3935_I2C_ADDR
-			.interval = appConfiguration.interval[USE_AS3935_HW_ID] > 0 ? appConfiguration.interval[USE_AS3935_HW_ID] : BH1750_DEFAULT_INTERVAL,
+			.checkI2cFunc = &checkI2CCondition,
+			.i2cAddr = AS3935_I2C_ADDR,
+			.interval = appConfiguration.interval[USE_AS3935_HW_ID] > 0 ? appConfiguration.interval[USE_AS3935_HW_ID] : AS3935_DEFAULT_INTERVAL,
 	};
 #endif
 
@@ -148,21 +152,22 @@ int main(void) {
 			.sc_channel     = (BaseChannel*)&LPSD1
 	};
 
-	power__threadConfig_t powerCfg = {
-			.hwId               = POWER_HW_ID,
-			.adcGroup           = &adcgrpcfgPower,
-			.adcDriver          = &ADCD1,
-			.i2cDriver          = &I2CD1,
-			.chrgInfoLine       = LINE_GPIOB_10,
-			.stdbyInfoLine      = LINE_GPIOB_11,
-			.interval           = appConfiguration.interval[POWER_HW_ID] > 0 ? appConfiguration.interval[POWER_HW_ID] : DEFAULT_TASK_INTERVAL,
-	};
-
 	static hc12cfg_t hc12cfg = {
 			.baud       = HC12_AT_BAUD9600,
 			.channel    = HC12_AT_CHANNEL1,
 			.modeFU     = HC12_AT_MODE_FU1,
 			.power      = HC12_AT_POWER_6_3mw
+	};
+
+	power__threadConfig_t powerCfg = {
+			.hwId               = POWER_HW_ID,
+			.adcGroup           = &adcgrpcfgPower,
+			.adcDriver          = &ADCD1,
+			.i2cDriver          = &I2CD1,
+			.checkI2cFunc = &checkI2CCondition,
+			.chrgInfoLine       = LINE_GPIOB_10,
+			.stdbyInfoLine      = LINE_GPIOB_11,
+			.interval           = appConfiguration.interval[POWER_HW_ID] > 0 ? appConfiguration.interval[POWER_HW_ID] : DEFAULT_TASK_INTERVAL,
 	};
 
 	///////////////////////////////////////////////////////////////
@@ -191,7 +196,8 @@ int main(void) {
 	device_wind_init();
 #endif
 	///////////////////////////////////////////////////////////////
-
+	palSetLineMode(LINE_GPIOB_7, PAL_STM32_MODE_OUTPUT);
+	palSetLine(LINE_GPIOB_7);
 
 	///////////////////////////////////////////////////////////////
 	//INIT THREADS
@@ -265,15 +271,13 @@ int main(void) {
 /**
  *
  */
-void checkI2CCondition(I2CDriver *driver){
+static bool checkI2CCondition(I2CDriver *driver){
 	if(driver->state == I2C_LOCKED){
-		i2cAcquireBus(driver);
-
 		i2cStop(driver);
 		if(driver == &I2CD1){
 			i2c1_init();
 		}
-
-		i2cReleaseBus(driver);
 	}
+
+	return driver->state == I2C_READY;
 }

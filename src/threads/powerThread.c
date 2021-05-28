@@ -23,7 +23,7 @@ static adcsample_t adcPowerSamples[ADC_POWER_GRP_CHARGE_NUM_CHANNELS * ADC_POWER
 static hw_t powerHW;
 static schedule_t   powerSchedule;
 
-static THD_WORKING_AREA(POWERVA, 250);
+static THD_WORKING_AREA(POWERVA, 170);
 static THD_FUNCTION(powerThread, arg) {
 	(void) arg;
 	chRegSetThreadName("Power");
@@ -67,8 +67,6 @@ static THD_FUNCTION(powerThread, arg) {
 	static uint16_t battAdcValue;
 	uint32_t streamBuff[4];
 	while (true) {
-		checkI2CCondition(powerThreadCfg->i2cDriver);
-
 		if(powerHW.status == HW_STATUS_ERROR){
 			ADS__init(&adcDev); // try reconfigure
 		}
@@ -119,6 +117,7 @@ void Power__thread_init(power__threadConfig_t *cfg) {
 	osalDbgCheck(cfg->adcGroup->num_channels == ADC_POWER_GRP_CHARGE_NUM_CHANNELS);
 	powerThreadCfg = cfg;
 	adcDev.i2cDriver = powerThreadCfg->i2cDriver;
+	adcDev.checkI2cFunc = powerThreadCfg->checkI2cFunc;
 }
 
 /**

@@ -13,7 +13,7 @@
 
 ////////////////////////////////////////
 ///// BMP280 I2C1 //////////////////////
-#define USE_BMP280
+//#define USE_BMP280
 
 #ifdef USE_BMP280
 	#define BMP280_HW_ID 1
@@ -36,7 +36,7 @@
 ////////////////////////////////////////
 ///// ML8511 ADC1 DEVICE 2 /////////////
 ///// ADC1 CHSEL4          /////////////
-#define USE_ML8511
+//#define USE_ML8511
 
 #ifdef USE_ML8511
 #define ML8511_HW_ID 3
@@ -80,9 +80,9 @@
 
 #ifdef USE_AS3935
 #define USE_AS3935_HW_ID            5
-#define  AS3935_INTERRUPT_LINE      -1
+#define  AS3935_INTERRUPT_LINE      LINE_GPIOA_13
 #define AS3935_DEFAULT_INTERVAL     10
-#define AS3935_I2C_ADDR             0x03
+#define AS3935_I2C_ADDR             0x00
 #define AS3935_CAPACITANCE          72
 #endif
 ////////////////////////////////////////

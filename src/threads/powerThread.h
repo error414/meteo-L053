@@ -13,6 +13,7 @@ typedef struct {
 	const ADCConversionGroup *adcGroup;
 	ADCDriver *adcDriver;
 	I2CDriver *i2cDriver;
+	bool (*checkI2cFunc)(I2CDriver *driver);
 	uint16_t interval; //second
 	uint32_t chrgInfoLine;
 	uint32_t stdbyInfoLine;

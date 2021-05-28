@@ -16,7 +16,7 @@ static schedule_t   ml8511Schedule;
 
 void Ml8511__thread_setInterval(uint16_t i);
 
-static THD_WORKING_AREA(ML8511VA, 70);
+static THD_WORKING_AREA(ML8511VA, 40);
 static THD_FUNCTION(ML8511Thread, arg) {
 	(void) arg;
 	chRegSetThreadName("Ml8511");

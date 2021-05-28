@@ -53,9 +53,14 @@
 #define AS3935_DISTURBER_DIS   0
 #define AS3935_DISTURBER_EN    1
 
+#define AS3935_INTERRUPT_NAME_NOISE_LEVEL_HIGH      b0001
+#define AS3935_INTERRUPT_NAME_DISTURBER_DETECTED    b0100
+#define AS3935_INTERRUPT_NAME_LIGHTNING             b1000
+
 typedef struct{
 	uint16_t addr;
 	I2CDriver* i2c;
+	bool (*checkI2cFunc)(I2CDriver *driver);
 	uint32_t isrLine;
 	thread_t *thread;
 } AS3935_I2C_dev_t;
@@ -84,6 +89,7 @@ uint8_t AS3935_GetWatchdogThreshold(AS3935_I2C_dev_t *dev);
 bool AS3935_SetWatchdogThreshold(AS3935_I2C_dev_t *dev, uint8_t wdth);
 uint8_t AS3935_GetSpikeRejection(AS3935_I2C_dev_t *dev);
 bool AS3935_SetSpikeRejection(AS3935_I2C_dev_t *dev, uint8_t srej);
+bool AS3935_TuneAntenna(AS3935_I2C_dev_t *dev, uint8_t tuneCapacitor);
 
 
 #endif

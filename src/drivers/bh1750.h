@@ -46,6 +46,7 @@
 typedef struct {
 	I2CDriver* i2c_handle;
 	uint8_t address;
+	bool (*checkI2cFunc)(I2CDriver *driver);
 
 	uint16_t value;
 	uint8_t bufferTx;
