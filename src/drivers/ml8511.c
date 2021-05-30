@@ -1,5 +1,6 @@
 #include "hal.h"
 #include "ml8511.h"
+#include "main.h"
 
 static ml8511_cfg_t *cfg;
 
@@ -57,7 +58,7 @@ float ML8511_getUV(){
  *
  */
 void ML8511_enable(void){
-	if (cfg->enableLine != ML8511_NO_ENABLE_LINE && cfg->isEnabled == false){
+	if (cfg->enableLine != LINE_NO_PIN && cfg->isEnabled == false){
 		palSetLine(cfg->enableLine);
 		cfg->isEnabled = true;
 		chThdSleepMilliseconds(1);
@@ -68,7 +69,7 @@ void ML8511_enable(void){
  *
  */
 void ML8511_disable(void){
-	if (cfg->enableLine != ML8511_NO_ENABLE_LINE){
+	if (cfg->enableLine != LINE_NO_PIN){
 		cfg->isEnabled = false;
 		palClearLine(cfg->enableLine);
 	}

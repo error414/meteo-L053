@@ -259,7 +259,7 @@ uint8_t AS3935_GetInterruptSrc(AS3935_I2C_dev_t *dev){
 	}else if(0x01 == int_src){
 		return 3;					// Noise level too high
 	}else{
-		return 0;
+		return 0xff;
 	}					// interrupt result not expected
 }
 
@@ -440,7 +440,7 @@ bool AS3935_SetLCO_FDIV(AS3935_I2C_dev_t *dev, uint8_t fdiv){
  * @return bool
  */
 bool AS3935_TuneAntenna(AS3935_I2C_dev_t *dev, uint8_t tuneCapacitor){
-	if(!AS3935_I2C__sing_reg_write(dev, 0x03, 0xC0, 0x00)){ // AS3935_LCO_FDIV
+	if(!AS3935_I2C__sing_reg_write(dev, 0x03, 0xC0, 0xC0)){ // AS3935_LCO_FDIV
 		return false;
 	}
 
@@ -470,7 +470,7 @@ static uint8_t AS3935_I2C__sing_reg_read(AS3935_I2C_dev_t *dev, uint8_t regAdd){
 
 	if(!dev->checkI2cFunc(dev->i2c)){
 		i2cReleaseBus(dev->i2c);
-		return false;
+		return 0xff;
 	}
 
 	static uint8_t dataTx; //static for DMA
@@ -483,7 +483,7 @@ static uint8_t AS3935_I2C__sing_reg_read(AS3935_I2C_dev_t *dev, uint8_t regAdd){
 		return dataRx;
 	} else{
 		i2cReleaseBus(dev->i2c);
-		return 0;
+		return 0xff;
 	}
 }
 

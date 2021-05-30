@@ -1,7 +1,6 @@
 #ifndef ML8511_H
 #define ML8511_H
 
-#define ML8511_NO_ENABLE_LINE 0xffffff
 #define ML8511_REFERENCE_VOLTAGE 0.95f
 
 typedef struct {

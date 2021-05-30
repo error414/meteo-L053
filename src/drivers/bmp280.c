@@ -60,12 +60,12 @@ static uint8_t tx_buff2[2];
  * @param params
  */
 void BMP280_init_default_params(bmp280_params_t *params) {
-	params->mode = BMP280_MODE_NORMAL;
+	params->mode = BMP280_MODE_FORCED;
 	params->filter = BMP280_FILTER_OFF;
 	params->oversampling_pressure = BMP280_STANDARD;
 	params->oversampling_temperature = BMP280_STANDARD;
 	params->oversampling_humidity = BMP280_STANDARD;
-	params->standby = BMP280_STANDBY_250;
+	params->standby = BMP280_STANDBY_500;
 }
 
 /**
@@ -110,7 +110,7 @@ static bool BMP280_read_data(BMP280_HandleTypedef *dev, uint8_t addr, uint8_t *v
 	}
 
 	tx_buff = addr;
-	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, &tx_buff, 1, value, len, 800) == MSG_OK){
+	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, &tx_buff, 1, value, len, OSAL_MS2I(800)) == MSG_OK){
 		i2cReleaseBus(dev->i2c);
 		return true;
 	}else{
@@ -135,7 +135,7 @@ static int BMP280_write_register8(BMP280_HandleTypedef *dev, uint8_t addr, uint8
 
 	tx_buff2[0] = addr;
 	tx_buff2[1] = value;
-	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, (uint8_t*)&tx_buff2, 2, &rx_buff[0], 0, 800) == MSG_OK){
+	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, (uint8_t*)&tx_buff2, 2, &rx_buff[0], 0, OSAL_MS2I(800)) == MSG_OK){
 		i2cReleaseBus(dev->i2c);
 		return false;
 	}else{
@@ -204,7 +204,6 @@ bool BMP280_init(BMP280_HandleTypedef *dev, bmp280_params_t *params) {
 
 	if (dev->addr != BMP280_I2C_ADDRESS_0
 	    && dev->addr != BMP280_I2C_ADDRESS_1) {
-
 		return false;
 	}
 
@@ -213,7 +212,6 @@ bool BMP280_init(BMP280_HandleTypedef *dev, bmp280_params_t *params) {
 	}
 
 	if (dev->id != BMP280_CHIP_ID && dev->id != BME280_CHIP_ID) {
-
 		return false;
 	}
 
@@ -420,6 +418,14 @@ bool BMP280_read_fixed(BMP280_HandleTypedef *dev, int32_t *temperature, uint32_t
  * @return
  */
 bool BMP280_read_float(BMP280_HandleTypedef *dev, float *temperature, float *pressure, float *humidity) {
+	if(dev->params.mode == BMP280_MODE_SLEEP){
+		if(BMP280_force_measurement(dev)){
+			chThdSleepMilliseconds(25);
+		}else{
+			return false;
+		}
+	}
+
 	int32_t fixed_temperature;
 	uint32_t fixed_pressure;
 	uint32_t fixed_humidity;

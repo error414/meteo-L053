@@ -87,8 +87,13 @@ static THD_FUNCTION(ML8511Thread, arg) {
  */
 void Ml8511__thread_init(ML8511__threadConfig_t *cfg) {
 	ml8511ThreadCfg = cfg;
-	if (cfg->driverEnableLine != ML8511_NO_ENABLE_LINE){
+	if (cfg->driverEnableLine != LINE_NO_PIN){
 		palSetLineMode(cfg->driverEnableLine, PAL_STM32_MODE_OUTPUT);
+	}
+
+	if (cfg->enablePinLine != LINE_NO_PIN){
+		palSetLineMode(cfg->enablePinLine, PAL_STM32_MODE_OUTPUT);
+		palSetLine(cfg->enablePinLine);
 	}
 }
 

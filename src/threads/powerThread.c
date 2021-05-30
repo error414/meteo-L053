@@ -17,17 +17,14 @@ static ADS1X15_device_t adcDev = {
 		.i2cAddress = 0x48,
 };
 
-
 static power__threadConfig_t *powerThreadCfg;
-static adcsample_t adcPowerSamples[ADC_POWER_GRP_CHARGE_NUM_CHANNELS * ADC_POWER_GRP_CHARGEBUF_DEPTH];
 static hw_t powerHW;
 static schedule_t   powerSchedule;
 
-static THD_WORKING_AREA(POWERVA, 170);
+static THD_WORKING_AREA(POWERVA, 190);
 static THD_FUNCTION(powerThread, arg) {
 	(void) arg;
 	chRegSetThreadName("Power");
-	msg_t msg;
 
 	///////////////////////////////////////////////////////////////
 	// REGISTER SCHEDULE
@@ -63,8 +60,9 @@ static THD_FUNCTION(powerThread, arg) {
 	(void) chMBPostTimeout(&registerHwMail, (msg_t) &powerHW, TIME_IMMEDIATE);
 	///////////////////////////////////////////////////////////////
 
-
 	static uint16_t battAdcValue;
+	static uint16_t solarAdcValue;
+
 	uint32_t streamBuff[4];
 	while (true) {
 		if(powerHW.status == HW_STATUS_ERROR){
@@ -74,18 +72,13 @@ static THD_FUNCTION(powerThread, arg) {
 		if(!HC12__tunrOffRadio()){
 			continue;
 		}
-		adcAcquireBus(powerThreadCfg->adcDriver);
-		adcStart(powerThreadCfg->adcDriver, NULL);
-		msg = adcConvert(powerThreadCfg->adcDriver, powerThreadCfg->adcGroup, adcPowerSamples, ADC_POWER_GRP_CHARGEBUF_DEPTH);
-		adcStop(powerThreadCfg->adcDriver);
-		adcReleaseBus(powerThreadCfg->adcDriver);
 
 		HC12__tunrOnRadio();
-		if(msg == MSG_OK && ADS__readADC_Differential_0_1(&adcDev, &battAdcValue)){
+		if(ADS__readADC_Differential_0_1(&adcDev, &battAdcValue) && ADS__readADC(&adcDev, 2, &solarAdcValue)){
 			chSysLock();
 			bool chrg = !palReadLine(powerThreadCfg->chrgInfoLine);
 
-			streamBuff[0] = powerHW.values[POWER_VOLTAGE_SOLAR].value   = (uint32_t)((float)(10.9f / (4096.0f / (double)adcPowerSamples[0])) * 100);
+			streamBuff[0] = powerHW.values[POWER_VOLTAGE_SOLAR].value   = (uint32_t)((ADS__toVoltage(&adcDev, solarAdcValue) * POWER_SOLAR_VOLTAGE_SCALE) * 100);
 			streamBuff[1] = powerHW.values[POWER_VOLTAGE_BATT].value    = (uint32_t)(ADS__toVoltage(&adcDev, battAdcValue) * 100);
 			streamBuff[2] = powerHW.values[POWER_CHRG_STATUS].value     = chrg;
 			streamBuff[3] = powerHW.values[POWER_STDBY_STATUS].value    = !palReadLine(powerThreadCfg->stdbyInfoLine);

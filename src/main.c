@@ -101,7 +101,8 @@ int main(void) {
 			.adcGroup = &adcgrpcfgDevice1,
 			.adcDriver = &ADCD1,
 			.interval = appConfiguration.interval[ML8511_HW_ID] > 0 ? appConfiguration.interval[ML8511_HW_ID] : ML8511_DEFAULT_INTERVAL,
-			.driverEnableLine = ML8511_ENABLE_PIN
+			.driverEnableLine = ML8511_DRIVER_ENABLE_PIN,
+			.enablePinLine = ML8511_ENABLE_PIN
 	};
 #endif
 
@@ -162,7 +163,6 @@ int main(void) {
 	power__threadConfig_t powerCfg = {
 			.hwId               = POWER_HW_ID,
 			.adcGroup           = &adcgrpcfgPower,
-			.adcDriver          = &ADCD1,
 			.i2cDriver          = &I2CD1,
 			.checkI2cFunc = &checkI2CCondition,
 			.chrgInfoLine       = LINE_GPIOB_10,
@@ -182,8 +182,10 @@ int main(void) {
 #ifdef SHELL_USE_UART_2
 	uart2_init();
 #endif
-
+#ifdef HW_USE_ADC
 	adc_power_init();
+#endif
+
 	power_GPIO_init();
 	i2c1_init();
 #ifdef USE_ML8511
@@ -196,8 +198,6 @@ int main(void) {
 	device_wind_init();
 #endif
 	///////////////////////////////////////////////////////////////
-	palSetLineMode(LINE_GPIOB_7, PAL_STM32_MODE_OUTPUT);
-	palSetLine(LINE_GPIOB_7);
 
 	///////////////////////////////////////////////////////////////
 	//INIT THREADS
@@ -263,7 +263,7 @@ int main(void) {
 	}
 #else
 	while (true) {
-		hThdSleepMilliseconds(10000);
+		chThdSleepMilliseconds(10000);
 	}
 #endif
 }

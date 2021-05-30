@@ -10,7 +10,7 @@ static msg_t registerScheduleDataLetter[SCHEDULE_LIST_SIZE];
 MAILBOX_DECL(registerScheduleMail, &registerScheduleDataLetter, SCHEDULE_LIST_SIZE);
 /////////////////////////////////////////////////////////////////////////
 
-static THD_WORKING_AREA(registerScheduleVA, 20);
+static THD_WORKING_AREA(registerScheduleVA, 40);
 static THD_FUNCTION(registerScheduleThread, arg) {
 	(void) arg;
 	chRegSetThreadName("registerSCH");

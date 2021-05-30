@@ -90,6 +90,11 @@ void Bh1750__thread_init(BH1750__threadConfig_t *cfg) {
 	BH1750_init_default_params(&BH1750_dev, cfg->driver, true);
 	BH1750_dev.checkI2cFunc = cfg->checkI2cFunc;
 	bh1750ThreadCfg = cfg;
+
+	if(cfg->enablePinLine != LINE_NO_PIN){
+		palSetLineMode(cfg->enablePinLine, PAL_STM32_MODE_OUTPUT);
+		palSetLine(cfg->enablePinLine);
+	}
 }
 
 /**

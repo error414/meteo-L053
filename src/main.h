@@ -21,7 +21,7 @@
 #define THREAD_PRIORITY_REGISTER_SCH        NORMALPRIO + 20
 
 #define CONFIG_BASE_ADDR 0
-#define VERSION 2
+#define VERSION 3
 
 typedef struct {
 	uint8_t   version;

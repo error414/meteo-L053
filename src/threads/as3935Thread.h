@@ -15,5 +15,6 @@ typedef struct {
 
 void As3935__thread_init(As3935__threadConfig_t *cfg);
 void As3935__thread_start(void);
+bool As3935__thread_autoTune(BaseSequentialStream *outStream);
 
 #endif

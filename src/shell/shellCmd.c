@@ -10,6 +10,7 @@
 #include "hwListThread.h"
 #include "scheduleListThread.h"
 #include "hc12Thread.h"
+#include "as3935Thread.h"
 #include "eeprom.h"
 
 #if (SHELL_CMD_THREADS_ENABLED == TRUE) || defined(__DOXYGEN__)
@@ -247,6 +248,16 @@ static void cmd_send(BaseSequentialStream *chp, int argc, char *argv[]){
 	shellUsage(chp, "param missing");
 }
 
+#ifdef USE_AS3935
+static void cmd_as3935Tune(BaseSequentialStream *chp, int argc, char *argv[]){
+	(void)argv;
+
+	As3935__thread_autoTune(chp);
+
+	chprintf(chp, "" SHELL_NEWLINE_STR);
+}
+#endif
+
 
 
 /*===========================================================================*/
@@ -260,6 +271,9 @@ static void cmd_send(BaseSequentialStream *chp, int argc, char *argv[]){
 const ShellCommand shellCommands[] = {
 #if SHELL_CMD_THREADS_ENABLED == TRUE
 		{"threads", cmd_threads},
+#endif
+#ifdef USE_AS3935
+		{"tune", cmd_as3935Tune},
 #endif
   {"sleep", cmd_sleep},
   {"hc12set", cmd_hc12Set},

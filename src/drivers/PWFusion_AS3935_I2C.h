@@ -91,5 +91,6 @@ uint8_t AS3935_GetSpikeRejection(AS3935_I2C_dev_t *dev);
 bool AS3935_SetSpikeRejection(AS3935_I2C_dev_t *dev, uint8_t srej);
 bool AS3935_TuneAntenna(AS3935_I2C_dev_t *dev, uint8_t tuneCapacitor);
 
+bool AS3935_GetValues(AS3935_I2C_dev_t *dev, uint8_t *interruptSrc, uint8_t *distance, uint32_t *energy);
 
 #endif

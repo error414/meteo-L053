@@ -10,7 +10,7 @@ msg_t registerHwDataLetter[HW_LIST_SIZE];
 MAILBOX_DECL(registerHwMail, &registerHwDataLetter, HW_LIST_SIZE);
 /////////////////////////////////////////////////////////////////////////
 
-static THD_WORKING_AREA(registerHWVA, 20);
+static THD_WORKING_AREA(registerHWVA, 40);
 static THD_FUNCTION(registerHwThread, arg) {
 	(void) arg;
 	chRegSetThreadName("registerHW");
