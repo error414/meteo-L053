@@ -20,6 +20,10 @@
 #include "bh1750Thread.h"
 #endif
 
+#ifdef USE_VEML7700
+#include "veml7700Thread.h"
+#endif
+
 #ifdef USE_ML8511
 #include "ml8511Thread.h"
 #endif
@@ -93,6 +97,16 @@ int main(void) {
 			.checkI2cFunc = &checkI2CCondition,
 			.interval = appConfiguration.interval[BH1750_HW_ID] > 0 ? appConfiguration.interval[BH1750_HW_ID] : BH1750_DEFAULT_INTERVAL,
 	};
+#endif
+
+#ifdef USE_VEML7700
+	VEML7700__threadConfig_t veml7700Cfg = {
+			.hwId = VEML7700_HW_ID,
+			.driver = &I2CD1,
+			.enablePinLine = VEML7700_ENABLE_PIN,
+			.checkI2cFunc = &checkI2CCondition,
+			.interval = appConfiguration.interval[VEML7700_HW_ID] > 0 ? appConfiguration.interval[VEML7700_HW_ID] : VEML7700_DEFAULT_INTERVAL,
+			};
 #endif
 
 #ifdef USE_ML8511
@@ -209,6 +223,9 @@ int main(void) {
 #ifdef USE_BMP280
 	Bmp280__thread_init(&bmp280Cfg);
 #endif
+#ifdef USE_VEML7700
+	Veml7700__thread_init(&veml7700Cfg);
+#endif
 #ifdef USE_BH1750
 	Bh1750__thread_init(&bh1750Cfg);
 #endif
@@ -239,6 +256,9 @@ int main(void) {
 #endif
 #ifdef USE_BH1750
 	Bh1750__thread_start();
+#endif
+#ifdef USE_VEML7700
+	Veml7700__thread_start();
 #endif
 #ifdef USE_ML8511
 	Ml8511__thread_start();

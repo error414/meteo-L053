@@ -13,7 +13,7 @@ SET(CHIBIOS_PROCESS_STACK_SIZE 0x190)
 SET(CHIBIOS_MAIN_STACK_SIZE 0x190)
 SET(ChibiOS_LINKER_SCRIPT ${CMAKE_CURRENT_LIST_DIR}/cfg/STM32L053x8.ld)
 
-SET(TOOLCHAIN_PREFIX C:/Users/error414/Documents/STM32-tools/gcc-arm-none-eabi-10-2020-q4-major/)
+SET(TOOLCHAIN_PREFIX "E:/Programming-Codes/STM32/STM32-tools/gcc-arm-none-eabi-10-2020-q4-major/")
 
 PROJECT(stm32-chibios C ASM)
 

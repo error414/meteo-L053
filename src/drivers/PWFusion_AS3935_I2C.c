@@ -545,7 +545,7 @@ static bool AS3935_I2C__write16(AS3935_I2C_dev_t *dev, uint16_t data){
 	dataTx = data;
 
 	// finally, write the data to the register
-	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, (uint8_t*)&dataTx, 1, (uint8_t*)&dataRx, 0, OSAL_MS2I(800)) == MSG_OK) {
+	if (i2cMasterTransmitTimeout(dev->i2c, dev->addr, (uint8_t*)&dataTx, 2, (uint8_t*)&dataRx, 0, OSAL_MS2I(800)) == MSG_OK) {
 		i2cReleaseBus(dev->i2c);
 		return true;
 	} else{

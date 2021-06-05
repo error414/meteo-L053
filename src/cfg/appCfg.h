@@ -25,12 +25,23 @@
 
 ////////////////////////////////////////
 ///// BH1750 I2C1 //////////////////////
-#define USE_BH1750
+//#define USE_BH1750
 
 #ifdef USE_BH1750
 	#define BH1750_HW_ID 2
 	#define BH1750_ENABLE_PIN  LINE_NO_PIN
 	#define BH1750_DEFAULT_INTERVAL DEFAULT_TASK_INTERVAL
+#endif
+////////////////////////////////////////
+
+////////////////////////////////////////
+/////VEML7700 I2C1 //////////////////////
+#define USE_VEML7700
+
+#ifdef USE_VEML7700
+	#define VEML7700_HW_ID 2
+	#define VEML7700_ENABLE_PIN  LINE_NO_PIN
+	#define VEML7700_DEFAULT_INTERVAL DEFAULT_TASK_INTERVAL
 #endif
 ////////////////////////////////////////
 
@@ -96,8 +107,8 @@
 
 ////////////////////////////////////////
 ///// SHELL               /////////////
-//#define USE_SHELL
-#define SHELL_USE_UART_2
+#define USE_SHELL
+#define SHELL_USE_UART_1
 ////////////////////////////////////////
 
 #if defined(USE_RAIN_FC37) || defined(USE_ML8511)

@@ -418,9 +418,23 @@ bool BMP280_read_fixed(BMP280_HandleTypedef *dev, int32_t *temperature, uint32_t
  * @return
  */
 bool BMP280_read_float(BMP280_HandleTypedef *dev, float *temperature, float *pressure, float *humidity) {
-	if(dev->params.mode == BMP280_MODE_SLEEP){
+    systime_t start, end;
+    if(dev->params.mode == BMP280_MODE_SLEEP){
 		if(BMP280_force_measurement(dev)){
-			chThdSleepMilliseconds(25);
+            start = chVTGetSystemTime();
+            end = chTimeAddX(start, TIME_MS2I(2000));
+            chThdSleepMilliseconds(5);
+            bool con = false;
+            do {
+                if(!BMP280_is_measuring(dev)){
+                    con = true;
+                    break;
+                }
+            } while (chVTIsSystemTimeWithin(start, end));
+
+            if(!con){
+                return false;
+            }
 		}else{
 			return false;
 		}
