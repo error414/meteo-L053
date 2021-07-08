@@ -58,7 +58,7 @@ static THD_FUNCTION(As3935Thread, arg) {
 	as3935HW.id = as3935ThreadCfg->hwId;
 	as3935HW.type = VALUE_TYPE_SENSOR;
 	as3935HW.name = AS3935_NAME;
-	as3935HW.status = AS3935_ManualCal(&AS3935_dev, 0, AS3935_LOCATION_OUTDOORS, AS3935_DISTURBER_EN) ? HW_STATUS_OK : HW_STATUS_ERROR;
+	as3935HW.status = AS3935_ManualCal(&AS3935_dev, 0, AS3935_LOCATION_INDOORS, AS3935_DISTURBER_EN) ? HW_STATUS_OK : HW_STATUS_ERROR;
 
 	as3935HW.values[0].formatter = VALUE_FORMATTER_NONE;
 	as3935HW.values[0].name = "Lighting";
@@ -76,6 +76,7 @@ static THD_FUNCTION(As3935Thread, arg) {
 		chBSemWait(&as3935_bsem);
 
 		if(as3935HW.status == HW_STATUS_ERROR){
+            As3935__thread_disableInterrupt(as3935ThreadCfg);
 			AS3935_init(&AS3935_dev); // try reconfigure
 			as3935HW.status = AS3935_ManualCal(&AS3935_dev, 72, AS3935_LOCATION_OUTDOORS, AS3935_DISTURBER_EN) ? HW_STATUS_OK : HW_STATUS_ERROR;
 
@@ -91,13 +92,11 @@ static THD_FUNCTION(As3935Thread, arg) {
 			distance        = AS3935_GetLightningDistKm(&AS3935_dev);
 			energy          = AS3935_GetStrikeEnergyRaw(&AS3935_dev);
 
-			if(interruptSrc != 0xff && distance != 0xff && energy != 0xff){
+			if(interruptSrc == 0x01 && distance != 0xff && energy != 0xff){
 				streamBuff[0] = as3935HW.values[AS3935_INTERRUPT_SRC].value  = (uint32_t)interruptSrc;
 				streamBuff[1] = as3935HW.values[AS3935_DISTANCE].value       = (uint32_t)distance;
 				streamBuff[2] = as3935HW.values[AS3935_ENERGY].value         = (uint32_t)energy;
 				as3935HW.status = HW_STATUS_OK;
-
-				interruptCount = 0;
 
 				poolStreamObject_t* messagePoolObject = (poolStreamObject_t *) chPoolAlloc(&streamMemPool);
 				if (messagePoolObject) {
@@ -105,9 +104,9 @@ static THD_FUNCTION(As3935Thread, arg) {
 					chMBPostTimeout(&streamMail, (msg_t) messagePoolObject, TIME_IMMEDIATE);
 				}
 
-			}else{
-				as3935HW.status = HW_STATUS_ERROR;
 			}
+
+            interruptCount = 0;
 			As3935__thread_enableInterrupt(as3935ThreadCfg);
 		}
 
@@ -160,7 +159,7 @@ void As3935__thread_enableInterrupt(As3935__threadConfig_t *cfg) {
  *
  */
 void As3935__thread_disableInterrupt(As3935__threadConfig_t *cfg) {
-	palDisableLineEvent(cfg->interruptLine);
+	//palDisableLineEvent(cfg->interruptLine);
 }
 
 /**

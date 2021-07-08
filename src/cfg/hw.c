@@ -105,28 +105,28 @@ void i2c1_init(void){
 ////////////////////////////////////////////////////////////////////////////////////////////
 // ADC / GROUP POWER / SOLAR + BAT
 ////////////////////////////////////////////////////////////////////////////////////////////
-const ADCConversionGroup adcgrpcfgPower = {
+/*const ADCConversionGroup adcgrpcfgPower = {
 		FALSE,
 		2,
 		FALSE,
 		FALSE,
-		ADC_CFGR1_RES_12BIT,                            /* CFGRR1 */
-		0,                                               /* CFGRR2 */
-		ADC_TR(0, 0),                            /* TR */
-		ADC_SMPR_SMP_7P5,                                       /* SMPR */
-		ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6           /* CHSELR */
-};
+		ADC_CFGR1_RES_12BIT,                            *//* CFGRR1 *//*
+		0,                                               *//* CFGRR2 *//*
+		ADC_TR(0, 0),                            *//* TR *//*
+		ADC_SMPR_SMP_7P5,                                       *//* SMPR *//*
+		ADC_CHSELR_CHSEL5 | ADC_CHSELR_CHSEL6           *//* CHSELR *//*
+};*/
 
 /**
  *
  */
 
 
-void adc_power_init(void){
+/*void adc_power_init(void){
 	palSetLineMode(LINE_GPIOA_5, PAL_MODE_INPUT_ANALOG);
 	palSetLineMode(LINE_GPIOA_6, PAL_MODE_INPUT_ANALOG);
 }
-
+*/
 void power_GPIO_init(void){
 	palSetLineMode(LINE_GPIOB_10, PAL_MODE_INPUT_PULLUP); //CHRG
 	palSetLineMode(LINE_GPIOB_11, PAL_MODE_INPUT_PULLUP); //STDBY

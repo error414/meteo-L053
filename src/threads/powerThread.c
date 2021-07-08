@@ -74,6 +74,7 @@ static THD_FUNCTION(powerThread, arg) {
 		}
 
 		HC12__tunrOnRadio();
+
 		if(ADS__readADC_Differential_0_1(&adcDev, &battAdcValue) && ADS__readADC(&adcDev, 2, &solarAdcValue)){
 			chSysLock();
 			bool chrg = !palReadLine(powerThreadCfg->chrgInfoLine);
@@ -87,7 +88,7 @@ static THD_FUNCTION(powerThread, arg) {
 
 			poolStreamObject_t* messagePoolObject = (poolStreamObject_t *) chPoolAlloc(&streamMemPool);
 			if (messagePoolObject) {
-				MSP__createMspFrame(messagePoolObject, (uint8_t)powerHW.id, 3, (uint32_t*)&streamBuff);
+				MSP__createMspFrame(messagePoolObject, (uint8_t)powerHW.id, 4, (uint32_t*)&streamBuff);
 				chMBPostTimeout(&streamMail, (msg_t) messagePoolObject, TIME_IMMEDIATE);
 			}
 		}else{
@@ -107,7 +108,6 @@ static THD_FUNCTION(powerThread, arg) {
  *
  */
 void Power__thread_init(power__threadConfig_t *cfg) {
-	osalDbgCheck(cfg->adcGroup->num_channels == ADC_POWER_GRP_CHARGE_NUM_CHANNELS);
 	powerThreadCfg = cfg;
 	adcDev.i2cDriver = powerThreadCfg->i2cDriver;
 	adcDev.checkI2cFunc = powerThreadCfg->checkI2cFunc;

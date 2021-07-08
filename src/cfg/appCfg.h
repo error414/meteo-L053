@@ -6,7 +6,7 @@
 #define HC12_HW_ID_OFFSET 0
 #define LINE_NO_PIN 0xffffff
 
-#define DEFAULT_TASK_INTERVAL 60 //second
+#define DEFAULT_TASK_INTERVAL 300 //second
 
 ////////////////////////////////////////
 ///// SENSORS /////////////////////////
@@ -83,7 +83,7 @@
 ////////////////////////////////////////
 ///// POWER               /////////////
 #define POWER_HW_ID 4
-#define POWER_SOLAR_VOLTAGE_SCALE 1.534
+#define POWER_SOLAR_VOLTAGE_SCALE 3.25
 ////////////////////////////////////////
 
 ////////////////////////////////////////

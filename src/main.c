@@ -176,7 +176,6 @@ int main(void) {
 
 	power__threadConfig_t powerCfg = {
 			.hwId               = POWER_HW_ID,
-			.adcGroup           = &adcgrpcfgPower,
 			.i2cDriver          = &I2CD1,
 			.checkI2cFunc = &checkI2CCondition,
 			.chrgInfoLine       = LINE_GPIOB_10,
@@ -197,7 +196,7 @@ int main(void) {
 	uart2_init();
 #endif
 #ifdef HW_USE_ADC
-	adc_power_init();
+	adc_device1_init();
 #endif
 
 	power_GPIO_init();
